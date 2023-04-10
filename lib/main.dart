@@ -4,7 +4,7 @@ import './sliding_app_bar.dart';
 
 void main() {
   SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(statusBarColor: Colors.greenAccent),
+    const SystemUiOverlayStyle(statusBarColor: Colors.greenAccent),
   );
   runApp(const MyApp());
 }
@@ -43,7 +43,7 @@ class _MyHomePageState extends State<MyHomePage>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 400),
     );
   }
 
