@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:timescape/item_manager.dart';
+import 'package:timescape/list_view.dart';
 import './sliding_app_bar.dart';
 
 void main() {
@@ -15,13 +18,16 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        platform: TargetPlatform.iOS,
+    return ChangeNotifierProvider(
+      create: (context) => ItemManager(),
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          platform: TargetPlatform.iOS,
+        ),
+        home: const MyHomePage(),
       ),
-      home: const MyHomePage(),
     );
   }
 }
@@ -68,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage>
                           : const NeverScrollableScrollPhysics(),
                       children: const <Widget>[
                         Center(
-                          child: Text("It's cloudy here"),
+                          child: ItemListView(),
                         ),
                         Center(
                           child: Text("It's rainy here innit"),
