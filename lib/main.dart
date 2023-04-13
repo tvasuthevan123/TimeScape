@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:timescape/item_manager.dart';
 import 'package:timescape/list_view.dart';
 import './sliding_app_bar.dart';
+import './custom_tab_bar.dart';
 
 void main() {
   SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(statusBarColor: Colors.greenAccent),
+    const SystemUiOverlayStyle(
+        statusBarColor: Color.fromARGB(255, 235, 254, 255)),
   );
   runApp(const MyApp());
 }
@@ -21,9 +23,22 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => ItemManager(),
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          primarySwatch: const MaterialColor(0xFF000000, {
+            50: Colors.black,
+            100: Colors.black,
+            200: Colors.black,
+            300: Colors.black,
+            400: Colors.black,
+            500: Colors.black,
+            600: Colors.black,
+            700: Colors.black,
+            800: Colors.black,
+            900: Colors.black,
+          }),
+          primaryColor: const Color.fromARGB(255, 235, 254, 255),
           platform: TargetPlatform.iOS,
         ),
         home: const MyHomePage(),
@@ -65,7 +80,7 @@ class _MyHomePageState extends State<MyHomePage>
           child: Stack(
             children: [
               Container(
-                  color: Colors.greenAccent,
+                  color: const Color.fromARGB(255, 235, 254, 255),
                   child: SizedBox(
                     height: maxHeight,
                     child: TabBarView(
@@ -93,7 +108,8 @@ class _MyHomePageState extends State<MyHomePage>
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      backgroundColor: Colors.blueGrey,
+                      backgroundColor: Colors.transparent,
+                      side: const BorderSide(width: 3.0, color: Colors.black),
                       padding: EdgeInsets.zero,
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.only(
@@ -114,36 +130,15 @@ class _MyHomePageState extends State<MyHomePage>
               SlidingAppBar(
                 controller: _controller,
                 visible: _isShowing,
-                child: const ExampleTabBar(),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: CustomTabBar(),
+                ),
               )
             ],
           ),
         ),
       ),
     );
-  }
-}
-
-class ExampleTabBar extends StatelessWidget {
-  const ExampleTabBar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        color: Colors.amber,
-        child: const TabBar(
-          indicatorColor: Colors.transparent,
-          tabs: <Widget>[
-            Tab(
-              icon: Icon(Icons.cloud_outlined),
-            ),
-            Tab(
-              icon: Icon(Icons.beach_access_sharp),
-            ),
-            Tab(
-              icon: Icon(Icons.brightness_5_sharp),
-            ),
-          ],
-        ));
   }
 }
