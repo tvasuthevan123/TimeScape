@@ -8,7 +8,8 @@ import 'package:timescape/toggle_selection.dart';
 import 'item_manager.dart';
 
 class ItemListView extends StatelessWidget {
-  const ItemListView({super.key});
+  final ItemType type;
+  const ItemListView({super.key, required this.type});
   @override
   Widget build(BuildContext context) {
     return Consumer<ItemManager>(
@@ -22,7 +23,8 @@ class ItemListView extends StatelessWidget {
               itemCount: itemManager.items.length,
               itemBuilder: (context, index) {
                 final item = items[index];
-                if (item.type == ItemType.task) {
+                print("Keys: ${itemKeys[index]}");
+                if (item.type == type) {
                   return Center(
                     child: TaskTile(
                       key: Key(itemKeys[index]),

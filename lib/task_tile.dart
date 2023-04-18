@@ -6,7 +6,7 @@ class TaskTile extends StatefulWidget {
   const TaskTile({Key? key, required this.item}) : super(key: key);
 
   @override
-  _TaskTileState createState() => _TaskTileState();
+  State<TaskTile> createState() => _TaskTileState();
 }
 
 class _TaskTileState extends State<TaskTile>
@@ -27,51 +27,99 @@ class _TaskTileState extends State<TaskTile>
         onLongPress: () {
           // placeholder code for "on press and hold"
         },
-        child: Stack(
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              height: _isExpanded ? 200 : 0,
-              width: screenWidth * 0.8,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10.0),
-                border: Border.all(
-                  color: const Color.fromRGBO(0, 39, 41, 1),
-                  width: 2.0,
+        child: InkWell(
+          child: Stack(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                height: _isExpanded ? 230 : 0,
+                width: screenWidth * 0.8,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10.0),
+                  border: Border.all(
+                    color: const Color.fromRGBO(0, 39, 41, 1),
+                    width: 2.0,
+                  ),
+                  color: const Color.fromRGBO(214, 253, 255, 1),
                 ),
-                color: const Color.fromRGBO(214, 253, 255, 1),
-              ),
-              padding: const EdgeInsets.fromLTRB(16, 64, 16, 16),
-              child: Text(
-                widget.item.description,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Color.fromRGBO(0, 58, 61, 1),
+                child: ClipRect(
+                  child: OverflowBox(
+                    maxHeight: _isExpanded ? double.infinity : null,
+                    alignment: Alignment.topCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 64, 16, 16),
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+                          Text(
+                            "Description: ${widget.item.description}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Color.fromRGBO(0, 58, 61, 1),
+                            ),
+                          ),
+                          const Divider(
+                            thickness: 1,
+                          ),
+                          Text(
+                            "Deadline: ${widget.item.deadline}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Color.fromRGBO(0, 58, 61, 1),
+                            ),
+                          ),
+                          const Divider(
+                            thickness: 1,
+                          ),
+                          Text(
+                            "Estimated Length: ${widget.item.estimatedLength}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Color.fromRGBO(0, 58, 61, 1),
+                            ),
+                          ),
+                          const Divider(
+                            thickness: 1,
+                          ),
+                          Text(
+                            "Urgency: ${widget.item.urgency}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Color.fromRGBO(0, 58, 61, 1),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-            Container(
-              width: screenWidth * 0.8,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10.0),
-                border: Border.all(
-                  color: const Color.fromRGBO(0, 39, 41, 1),
-                  width: 2.0,
+              Container(
+                width: screenWidth * 0.8,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10.0),
+                  border: Border.all(
+                    color: const Color.fromRGBO(0, 39, 41, 1),
+                    width: 2.0,
+                  ),
+                  color: const Color.fromRGBO(0, 78, 82, 1),
                 ),
-                color: const Color.fromRGBO(0, 78, 82, 1),
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                widget.item.title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.white,
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  widget.item.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

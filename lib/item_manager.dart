@@ -1,7 +1,10 @@
 import 'dart:collection';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+
+const timeLeeway = Duration(days: 3);
 
 class ItemManager extends ChangeNotifier {
   /// Internal, private state of the cart.
@@ -54,7 +57,9 @@ class Item {
     this.isCompleted = false,
     required this.estimatedLength,
     this.isSoftDeadline = false,
-  });
+  }) {
+    calculateUrgency();
+  }
 
   void editTitle(String title) {
     this.title = title;
@@ -66,6 +71,7 @@ class Item {
 
   void editType(ItemType type) {
     this.type = type;
+    calculateUrgency();
   }
 
   void editCompleted(bool isCompleted) {
@@ -75,13 +81,33 @@ class Item {
   void editDeadline(bool isSoftDeadline, DateTime deadline) {
     this.isSoftDeadline = isSoftDeadline;
     this.deadline = deadline;
+    calculateUrgency();
   }
 
   void editEstimatedLength(Duration estimatedLength) {
     this.estimatedLength = estimatedLength;
+    calculateUrgency();
   }
 
   void incrementTimeSpent() {
     timeSpent = Duration(seconds: timeSpent.inSeconds + 1);
+  }
+
+  void calculateUrgency() {
+    if (isCompleted || type != ItemType.task) return;
+
+    double denominator = isSoftDeadline
+        ? timeLeeway.inSeconds.toDouble() +
+            deadline.difference(DateTime.now()).inSeconds.toDouble()
+        : deadline.difference(DateTime.now()).inSeconds.toDouble();
+    if (denominator == 0) {
+      denominator = 1e-6; // set a small value
+    }
+    double x = log(1 +
+        ((estimatedLength.inSeconds - timeSpent.inSeconds) /
+                (deadline.difference(DateTime.now()).inSeconds)) /
+            denominator);
+    double calculatedUrgency = -1 + (2 / (1 + pow(e, (-8 * x + 2))));
+    urgency = calculatedUrgency.clamp(0.0, 1.0);
   }
 }

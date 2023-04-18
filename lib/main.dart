@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:timescape/item_manager.dart';
 import 'package:timescape/list_view.dart';
+import 'package:timescape/scheduler.dart';
 import './sliding_app_bar.dart';
 import './custom_tab_bar.dart';
+import './day_view.dart';
 
 const double buttonHeight = 50;
 
@@ -48,7 +50,7 @@ class MyApp extends StatelessWidget {
             },
           ),
           primaryColor: const Color.fromARGB(255, 235, 254, 255),
-          platform: TargetPlatform.iOS,
+          platform: TargetPlatform.android,
         ),
         home: const MyHomePage(),
       ),
@@ -103,14 +105,26 @@ class _MyHomePageState extends State<MyHomePage>
                             padding: EdgeInsets.only(
                               top: _isShowing ? 40 + buttonHeight : 40,
                             ),
-                            child: const ItemListView(),
+                            child: const ItemListView(type: ItemType.task),
                           ),
                         ),
-                        const Center(
-                          child: Text("It's rainy here innit"),
+                        Center(
+                          child: AnimatedPadding(
+                            duration: const Duration(milliseconds: 400),
+                            padding: EdgeInsets.only(
+                              top: _isShowing ? 40 + buttonHeight : 40,
+                            ),
+                            child: const ItemListView(type: ItemType.reminder),
+                          ),
                         ),
-                        const Center(
-                          child: Text("It's sunny here"),
+                        Center(
+                          child: AnimatedPadding(
+                            duration: const Duration(milliseconds: 400),
+                            padding: EdgeInsets.only(
+                              top: _isShowing ? 40 + buttonHeight : 40,
+                            ),
+                            child: DayView(),
+                          ),
                         ),
                       ],
                     ),
