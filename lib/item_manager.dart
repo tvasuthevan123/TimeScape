@@ -36,14 +36,52 @@ enum ItemType { task, reminder }
 class Item {
   String title;
   String description;
-  ItemType itemType;
+  ItemType type;
   bool isCompleted;
+  bool isSoftDeadline;
+  DateTime deadline;
   Duration timeSpent = const Duration();
+  Duration estimatedLength;
+
+  double urgency = 0;
+  int category = 0;
 
   Item({
     required this.title,
     required this.description,
-    required this.itemType,
+    required this.type,
+    required this.deadline,
     this.isCompleted = false,
+    required this.estimatedLength,
+    this.isSoftDeadline = false,
   });
+
+  void editTitle(String title) {
+    this.title = title;
+  }
+
+  void editDescription(String description) {
+    this.description = description;
+  }
+
+  void editType(ItemType type) {
+    this.type = type;
+  }
+
+  void editCompleted(bool isCompleted) {
+    this.isCompleted = isCompleted;
+  }
+
+  void editDeadline(bool isSoftDeadline, DateTime deadline) {
+    this.isSoftDeadline = isSoftDeadline;
+    this.deadline = deadline;
+  }
+
+  void editEstimatedLength(Duration estimatedLength) {
+    this.estimatedLength = estimatedLength;
+  }
+
+  void incrementTimeSpent() {
+    timeSpent = Duration(seconds: timeSpent.inSeconds + 1);
+  }
 }

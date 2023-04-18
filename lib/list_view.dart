@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:timescape/date_picker.dart';
+import 'package:timescape/duration_picker.dart';
+import 'package:timescape/task_tile.dart';
 import 'package:timescape/toggle_selection.dart';
 
 import 'item_manager.dart';
@@ -11,26 +14,39 @@ class ItemListView extends StatelessWidget {
     return Consumer<ItemManager>(
       builder: (context, itemManager, child) {
         // Use yourProvider data to build your widget tree here
+        final items = itemManager.items.values.toList().reversed.toList();
+        final itemKeys = itemManager.items.keys.toList().reversed.toList();
         return Stack(
           children: [
             ListView.builder(
               itemCount: itemManager.items.length,
               itemBuilder: (context, index) {
-                final items =
-                    itemManager.items.values.toList().reversed.toList();
-                return ListTile(
-                  title: Text(items[index].title),
-                );
+                final item = items[index];
+                if (item.type == ItemType.task) {
+                  return Center(
+                    child: TaskTile(
+                      key: Key(itemKeys[index]),
+                      item: item,
+                    ),
+                  );
+                }
+                return null;
               },
             ),
             Positioned(
               bottom: 16.0,
               right: 16.0,
               child: FloatingActionButton(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                backgroundColor: const Color.fromRGBO(0, 39, 41, 1),
                 onPressed: () {
                   String itemTitle = '';
                   String itemDescription = '';
                   ItemType itemType = ItemType.task;
+                  DateTime deadline = DateTime.now();
+                  Duration duration = const Duration(hours: 0, minutes: 15);
                   showModalBottomSheet(
                     context: context,
                     builder: (BuildContext context) {
@@ -94,12 +110,31 @@ class ItemListView extends StatelessWidget {
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
+                                child: DateTimePicker(
+                                  onDateTimeChanged: (DateTime newDate) {
+                                    deadline = newDate;
+                                  },
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: DurationPicker(
+                                  initialDuration: duration,
+                                  onDurationChanged: (Duration newDuration) {
+                                    duration = newDuration;
+                                  },
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
                                 child: ElevatedButton(
                                   onPressed: () {
                                     Item item = Item(
                                       title: itemTitle,
                                       description: itemDescription,
-                                      itemType: itemType,
+                                      type: itemType,
+                                      deadline: deadline,
+                                      estimatedLength: duration,
                                     );
                                     Provider.of<ItemManager>(context,
                                             listen: false)
@@ -116,7 +151,10 @@ class ItemListView extends StatelessWidget {
                     },
                   );
                 },
-                child: const Icon(Icons.add),
+                child: const Icon(
+                  Icons.add,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
