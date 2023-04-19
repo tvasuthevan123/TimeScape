@@ -96,18 +96,54 @@ class Item {
   void calculateUrgency() {
     if (isCompleted || type != ItemType.task) return;
 
-    double denominator = isSoftDeadline
-        ? timeLeeway.inSeconds.toDouble() +
-            deadline.difference(DateTime.now()).inSeconds.toDouble()
-        : deadline.difference(DateTime.now()).inSeconds.toDouble();
-    if (denominator == 0) {
-      denominator = 1e-6; // set a small value
-    }
-    double x = log(1 +
-        ((estimatedLength.inSeconds - timeSpent.inSeconds) /
-                (deadline.difference(DateTime.now()).inSeconds)) /
-            denominator);
-    double calculatedUrgency = -1 + (2 / (1 + pow(e, (-8 * x + 2))));
+    int minutesToDeadline = calculateWorkingMinutes(
+      DateTime.now(),
+      deadline,
+    );
+
+    print("Minutes to deadline: ${minutesToDeadline}");
+    double x = 0.5 -
+        (1 / (12 * log(2))) *
+            log((minutesToDeadline) / (5 * estimatedLength.inMinutes));
+
+    double calculatedUrgency = -1 + (2 / (1 + pow(e, 0.5 + (-6 * x))));
+    print("Urgency ${calculatedUrgency}");
     urgency = calculatedUrgency.clamp(0.0, 1.0);
+  }
+
+  int calculateWorkingMinutes(DateTime start, DateTime end) {
+    // Make sure the start time is earlier than the end time
+    if (start.isAfter(end)) {
+      final temp = start;
+      start = end;
+      end = temp;
+    }
+
+    int workingMinutes = 0;
+
+    // Calculate the number of minutes in the first partial day
+    final startTomorrow = DateTime(start.year, start.month, start.day + 1, 9);
+    final endToday = DateTime(start.year, start.month, start.day, 17);
+    final minutesToday = endToday.difference(start).inMinutes;
+    final minutesFirstPartialDay = minutesToday > 0 ? minutesToday : 0;
+
+    // Calculate the number of minutes in the last partial day
+    final endYesterday = DateTime(end.year, end.month, end.day - 1, 17);
+    final startNextDay = DateTime(end.year, end.month, end.day, 9);
+    final minutesLastPartialDay = end.difference(endYesterday).inMinutes +
+        (startNextDay.isBefore(end)
+            ? startNextDay.difference(endYesterday).inMinutes
+            : 0);
+
+    // Calculate the number of minutes in each full day
+    final fullDayStart = startTomorrow;
+    final fullDayEnd = endYesterday;
+    final fullDaysBetween = fullDayEnd.difference(fullDayStart).inDays + 1;
+    const minutesPerDay = (5 - 9) * 60; // 8 hours per day
+
+    workingMinutes = minutesFirstPartialDay + minutesLastPartialDay;
+    workingMinutes += fullDaysBetween * minutesPerDay;
+
+    return workingMinutes;
   }
 }

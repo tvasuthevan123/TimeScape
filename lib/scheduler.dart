@@ -77,3 +77,39 @@ int timeAvailable(Duration unassignedDuration, TimeBlock block) {
 void warning() {
   print('Warning: Task may not be completed before hard deadline.');
 }
+
+int calculateWorkingMinutes(DateTime start, DateTime end) {
+  // Make sure the start time is earlier than the end time
+  if (start.isAfter(end)) {
+    final temp = start;
+    start = end;
+    end = temp;
+  }
+
+  int workingMinutes = 0;
+
+  // Calculate the number of minutes in the first partial day
+  final startTomorrow = DateTime(start.year, start.month, start.day + 1, 9);
+  final endToday = DateTime(start.year, start.month, start.day, 17);
+  final minutesToday = endToday.difference(start).inMinutes;
+  final minutesFirstPartialDay = minutesToday > 0 ? minutesToday : 0;
+
+  // Calculate the number of minutes in the last partial day
+  final endYesterday = DateTime(end.year, end.month, end.day - 1, 17);
+  final startNextDay = DateTime(end.year, end.month, end.day, 9);
+  final minutesLastPartialDay = end.difference(endYesterday).inMinutes +
+      (startNextDay.isBefore(end)
+          ? startNextDay.difference(endYesterday).inMinutes
+          : 0);
+
+  // Calculate the number of minutes in each full day
+  final fullDayStart = startTomorrow;
+  final fullDayEnd = endYesterday;
+  final fullDaysBetween = fullDayEnd.difference(fullDayStart).inDays + 1;
+  const minutesPerDay = (5 - 9) * 60; // 8 hours per day
+
+  workingMinutes = minutesFirstPartialDay + minutesLastPartialDay;
+  workingMinutes += fullDaysBetween * minutesPerDay;
+
+  return workingMinutes;
+}

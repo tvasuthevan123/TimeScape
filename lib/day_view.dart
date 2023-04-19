@@ -3,7 +3,7 @@ import 'package:timescape/scheduler.dart';
 
 class DayView extends StatefulWidget {
   @override
-  _DayViewState createState() => _DayViewState();
+  State<DayView> createState() => _DayViewState();
 }
 
 class _DayViewState extends State<DayView> {
@@ -34,12 +34,12 @@ class _DayViewState extends State<DayView> {
       Assignment(
         time: DateTime(2023, 4, 18, 8, 40),
         itemID: '84965dc0-53b7-444d-84f2-2f3437e6761f',
-        duration: Duration(minutes: 120),
+        duration: const Duration(minutes: 120),
       ),
       Assignment(
         time: DateTime(2023, 4, 18, 14, 0),
         itemID: '1c7b6b5d-eb06-479d-8009-5316851c13e8',
-        duration: Duration(minutes: 60),
+        duration: const Duration(minutes: 60),
       ),
     ];
     return Stack(
@@ -118,14 +118,14 @@ class _DayViewState extends State<DayView> {
                       color: Colors.grey.withOpacity(0.5),
                       spreadRadius: 1,
                       blurRadius: 5,
-                      offset: Offset(0, 3),
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
                 child: Container(
                   color: Colors.lightBlue,
                   alignment: Alignment.topLeft,
-                  child: Text(
+                  child: const Text(
                     'Overlay',
                     textAlign: TextAlign.left,
                   ),
