@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:timescape/item_manager.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 class TaskTile extends StatefulWidget {
   final Item item;
@@ -98,23 +99,53 @@ class _TaskTileState extends State<TaskTile>
                   ),
                 ),
               ),
-              Container(
-                width: screenWidth * 0.8,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.0),
-                  border: Border.all(
-                    color: const Color.fromRGBO(0, 39, 41, 1),
-                    width: 2.0,
-                  ),
-                  color: const Color.fromRGBO(0, 78, 82, 1),
+              Slidable(
+                startActionPane: ActionPane(
+                  // A motion is a widget used to control how the pane animates.
+                  motion: const BehindMotion(),
+
+                  // A pane can dismiss the Slidable.
+                  dismissible: DismissiblePane(onDismissed: () {}),
+
+                  // All actions are defined in the children parameter.
+                  children: [
+                    // A SlidableAction can have an icon and/or a label.
+                    SlidableAction(
+                      onPressed: (BuildContext context) {},
+                      backgroundColor: Color(0xFFFE4A49),
+                      foregroundColor: Colors.white,
+                      icon: Icons.delete,
+                      label: 'Delete',
+                    ),
+                    SlidableAction(
+                      onPressed: (BuildContext context) {},
+                      backgroundColor: Color(0xFF21B7CA),
+                      foregroundColor: Colors.white,
+                      icon: Icons.share,
+                      label: 'Share',
+                    ),
+                  ],
                 ),
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  widget.item.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.white,
+                child: Center(
+                  child: Container(
+                    width: screenWidth * 0.8,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10.0),
+                      border: Border.all(
+                        color: const Color.fromRGBO(0, 39, 41, 1),
+                        width: 2.0,
+                      ),
+                      color: const Color.fromRGBO(0, 78, 82, 1),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      widget.item.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ),
