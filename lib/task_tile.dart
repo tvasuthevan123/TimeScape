@@ -28,10 +28,10 @@ class _TaskTileState extends State<TaskTile>
         onLongPress: () {
           // placeholder code for "on press and hold"
         },
-        child: InkWell(
-          child: Stack(
-            children: [
-              AnimatedContainer(
+        child: Stack(
+          children: [
+            Center(
+              child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 height: _isExpanded ? 230 : 0,
                 width: screenWidth * 0.8,
@@ -86,7 +86,7 @@ class _TaskTileState extends State<TaskTile>
                             thickness: 1,
                           ),
                           Text(
-                            "Urgency: ${widget.item.urgency}",
+                            "N Weight Urgency: ${widget.item.urgency}",
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -99,33 +99,33 @@ class _TaskTileState extends State<TaskTile>
                   ),
                 ),
               ),
-              Slidable(
-                startActionPane: ActionPane(
-                  // A motion is a widget used to control how the pane animates.
-                  motion: const BehindMotion(),
+            ),
+            Slidable(
+              startActionPane: ActionPane(
+                // A motion is a widget used to control how the pane animates.
+                motion: const BehindMotion(),
 
-                  // A pane can dismiss the Slidable.
-                  dismissible: DismissiblePane(onDismissed: () {}),
-
-                  // All actions are defined in the children parameter.
-                  children: [
-                    // A SlidableAction can have an icon and/or a label.
-                    SlidableAction(
-                      onPressed: (BuildContext context) {},
-                      backgroundColor: Color(0xFFFE4A49),
-                      foregroundColor: Colors.white,
-                      icon: Icons.delete,
-                      label: 'Delete',
-                    ),
-                    SlidableAction(
-                      onPressed: (BuildContext context) {},
-                      backgroundColor: Color(0xFF21B7CA),
-                      foregroundColor: Colors.white,
-                      icon: Icons.share,
-                      label: 'Share',
-                    ),
-                  ],
-                ),
+                // All actions are defined in the children parameter.
+                children: [
+                  // A SlidableAction can have an icon and/or a label.
+                  SlidableAction(
+                    onPressed: (BuildContext context) {},
+                    backgroundColor: Color(0xFFFE4A49),
+                    foregroundColor: Colors.white,
+                    icon: Icons.delete,
+                    label: 'Delete',
+                  ),
+                  SlidableAction(
+                    onPressed: (BuildContext context) {},
+                    backgroundColor: Color(0xFF21B7CA),
+                    foregroundColor: Colors.white,
+                    icon: Icons.edit,
+                    label: 'Edit',
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.zero,
                 child: Center(
                   child: Container(
                     width: screenWidth * 0.8,
@@ -149,8 +149,8 @@ class _TaskTileState extends State<TaskTile>
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

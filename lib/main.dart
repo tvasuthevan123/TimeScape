@@ -2,6 +2,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:timescape/database_helper.dart';
 import 'package:timescape/item_manager.dart';
 import 'package:timescape/list_view.dart';
 import 'package:timescape/scheduler.dart';
@@ -11,24 +13,30 @@ import './day_view.dart';
 
 const double buttonHeight = 50;
 
-void main() {
+void main() async {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
         statusBarColor: Color.fromARGB(255, 235, 254, 255)),
   );
-  runApp(const MyApp());
+  // Initialize the database.
+  await (DatabaseHelper().database);
+
+  // Create an instance of the ItemManager and load items from the database.
+  final itemManager = ItemManager();
+  await itemManager.loadItemsFromDatabase();
+  runApp(MyApp(itemManager: itemManager));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key, required this.itemManager}) : super(key: key);
+
+  final ItemManager itemManager;
 
   final primaryColor = const Color.fromRGBO(0, 39, 41, 1);
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => ItemManager(),
+    return ChangeNotifierProvider<ItemManager>.value(
+      value: itemManager,
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
