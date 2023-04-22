@@ -4,6 +4,7 @@ import 'package:timescape/date_picker.dart';
 import 'package:timescape/duration_picker.dart';
 import 'package:timescape/task_tile.dart';
 import 'package:timescape/toggle_selection.dart';
+import 'dart:math';
 
 import 'item_manager.dart';
 
@@ -52,11 +53,14 @@ class ItemListView extends StatelessWidget {
                   showModalBottomSheet(
                     context: context,
                     builder: (BuildContext context) {
+                      final double bottomPadding = max(
+                        MediaQuery.of(context).viewInsets.bottom,
+                        MediaQuery.of(context).size.height *
+                            0.05, // Add a minimum padding of 5% of the screen height
+                      );
                       return SingleChildScrollView(
-                        child: Container(
-                          padding: EdgeInsets.only(
-                            bottom: MediaQuery.of(context).viewInsets.bottom,
-                          ),
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: bottomPadding),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:timescape/item_manager.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:intl/intl.dart';
 
 class TaskTile extends StatefulWidget {
   final Item item;
@@ -45,7 +46,7 @@ class _TaskTileState extends State<TaskTile>
                 ),
                 child: ClipRect(
                   child: OverflowBox(
-                    maxHeight: _isExpanded ? double.infinity : null,
+                    maxHeight: _isExpanded ? 230 : 0,
                     alignment: Alignment.topCenter,
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 64, 16, 16),
@@ -64,7 +65,7 @@ class _TaskTileState extends State<TaskTile>
                             thickness: 1,
                           ),
                           Text(
-                            "Deadline: ${widget.item.deadline}",
+                            "Deadline: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(widget.item.deadline)}",
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -75,7 +76,7 @@ class _TaskTileState extends State<TaskTile>
                             thickness: 1,
                           ),
                           Text(
-                            "Estimated Length: ${widget.item.estimatedLength}",
+                            "Estimated Length: ${widget.item.estimatedLength.toString().split('.').first.padLeft(8, "0")}",
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
