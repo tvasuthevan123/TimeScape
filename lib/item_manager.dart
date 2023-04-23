@@ -66,8 +66,137 @@ class ItemManager extends ChangeNotifier {
     return sqrt(sum);
   }
 
+//   List<List<String>> classifyItemsIntoQuadrants() {
+//     List<Item> itemList = _items.values.toList();
+//     List<List<String>> eisenhowerQuadrants = [
+//       [], // Urgent & Important
+//       [], // Not Urgent & Important
+//       [], // Urgent & Not Important
+//       [], // Not Urgent & Not Important
+//     ];
+
+//     // Normalize features
+//     DateTime maxDeadline = itemList.fold(
+//         itemList[0].deadline,
+//         (prev, current) =>
+//             current.deadline.isAfter(prev) ? current.deadline : prev);
+//     Duration maxEstimatedLength = itemList.fold(
+//         itemList[0].estimatedLength,
+//         (prev, current) =>
+//             current.estimatedLength > prev ? current.estimatedLength : prev);
+//     double maxImportance = itemList.fold(
+//         itemList[0].importance,
+//         (prev, current) =>
+//             current.importance > prev ? current.importance : prev);
+
+//     Map<String, List<double>> normalizedItems = Map();
+//     for (Item item in itemList) {
+//       double normalizedDeadline = _minMaxNormalization(
+//           maxDeadline.difference(item.deadline).inMilliseconds.toDouble(),
+//           0,
+//           maxDeadline.difference(DateTime.now()).inMilliseconds.toDouble());
+//       double normalizedEstimatedLength = _minMaxNormalization(
+//           item.estimatedLength.inMilliseconds.toDouble(),
+//           0,
+//           maxEstimatedLength.inMilliseconds.toDouble());
+//       double normalizedImportance =
+//           _minMaxNormalization(item.importance, 0, maxImportance);
+
+//       List<double> normalizedValues = [
+//         normalizedDeadline,
+//         normalizedEstimatedLength,
+//         normalizedImportance,
+//       ];
+
+//       normalizedItems[item.id] = normalizedValues;
+//     }
+
+// // Calculate percentiles
+//     List<List<double>> normalizedValuesList = normalizedItems.values.toList();
+
+// // Sort by deadline
+//     normalizedValuesList.sort((a, b) => a[0].compareTo(b[0]));
+//     double urgencyP25 =
+//         normalizedValuesList[(normalizedValuesList.length * 0.25).floor()][0];
+//     double urgencyP75 =
+//         normalizedValuesList[(normalizedValuesList.length * 0.75).floor()][0];
+
+// // Sort by estimated length
+//     normalizedValuesList.sort((a, b) => a[1].compareTo(b[1]));
+//     double estimatedLengthP25 =
+//         normalizedValuesList[(normalizedValuesList.length * 0.25).floor()][1];
+//     double estimatedLengthP75 =
+//         normalizedValuesList[(normalizedValuesList.length * 0.75).floor()][1];
+
+// // Sort by importance
+//     normalizedValuesList.sort((a, b) => a[2].compareTo(b[2]));
+//     double importanceP25 =
+//         normalizedValuesList[(normalizedValuesList.length * 0.25).floor()][2];
+//     double importanceP75 =
+//         normalizedValuesList[(normalizedValuesList.length * 0.75).floor()][2];
+
+// // Define shadow centroids
+//     List<List<double>> centroids = [
+//       [urgencyP75, estimatedLengthP75, importanceP75], // Urgent & Important
+//       [urgencyP25, estimatedLengthP25, importanceP75], // Not Urgent & Important
+//       [urgencyP75, estimatedLengthP75, importanceP25], // Urgent & Not Important
+//       [
+//         urgencyP25,
+//         estimatedLengthP25,
+//         importanceP25
+//       ], // Not Urgent & Not Important
+//     ];
+
+//     print("Centroids");
+//     print(centroids);
+
+// // Classify items into quadrants
+//     List<String> itemIds = normalizedItems.keys.toList();
+//     for (String itemId in itemIds) {
+//       List<double> itemCoordinates = normalizedItems[itemId]!;
+//       double minDistance = double.infinity;
+//       int minIndex = 0;
+
+//       for (int i = 0; i < centroids.length; i++) {
+//         double distance = _euclideanDistance(itemCoordinates, centroids[i]);
+//         if (distance < minDistance) {
+//           minDistance = distance;
+//           minIndex = i;
+//         }
+//       }
+
+//       String quadrant = "Urgent, Important";
+//       switch (minIndex) {
+//         case 1:
+//           quadrant = "Not Urgent, Important";
+//           break;
+//         case 2:
+//           quadrant = "Urgent, Not Important";
+//           break;
+//         case 3:
+//           quadrant = "Not Urgent, Not Important";
+//           break;
+//         default:
+//           break;
+//       }
+
+//       print(
+//           "${items[itemId]?.importance},${items[itemId]?.estimatedLength.inMinutes}min, ${items[itemId]?.deadline.difference(DateTime.now()).inDays}days, $quadrant");
+//       // Assign the quadrant index (0-3) to the item
+//       eisenhowerQuadrants[minIndex].add(itemId);
+//     }
+
+//     return eisenhowerQuadrants;
+//   }
+
   List<List<String>> classifyItemsIntoQuadrants() {
     List<Item> itemList = _items.values.toList();
+
+    if (itemList.length < 10) {
+      itemList.sort((a, b) => a.deadline.compareTo(b.deadline));
+      return [itemList.map((item) => item.id).toList(), [], [], []];
+    }
+
     List<List<String>> eisenhowerQuadrants = [
       [], // Urgent & Important
       [], // Not Urgent & Important
@@ -75,85 +204,58 @@ class ItemManager extends ChangeNotifier {
       [], // Not Urgent & Not Important
     ];
 
-    // Normalize features
-    DateTime maxDeadline = itemList.fold(
-        itemList[0].deadline,
-        (prev, current) =>
-            current.deadline.isAfter(prev) ? current.deadline : prev);
-    Duration maxEstimatedLength = itemList.fold(
-        itemList[0].estimatedLength,
-        (prev, current) =>
-            current.estimatedLength > prev ? current.estimatedLength : prev);
     double maxImportance = itemList.fold(
         itemList[0].importance,
         (prev, current) =>
             current.importance > prev ? current.importance : prev);
 
-    Map<String, List<double>> normalizedItems = Map();
+    Map<String, List<double>> itemFeatures = {};
     for (Item item in itemList) {
-      double normalizedDeadline = _minMaxNormalization(
-          maxDeadline.difference(item.deadline).inMilliseconds.toDouble(),
-          0,
-          maxDeadline.difference(DateTime.now()).inMilliseconds.toDouble());
-      double normalizedEstimatedLength = _minMaxNormalization(
-          item.estimatedLength.inMilliseconds.toDouble(),
-          0,
-          maxEstimatedLength.inMilliseconds.toDouble());
+      double lengthToDeadlineRatio = item.estimatedLength.inMinutes /
+          item.deadline.difference(DateTime.now()).inMinutes;
       double normalizedImportance =
           _minMaxNormalization(item.importance, 0, maxImportance);
 
       List<double> normalizedValues = [
-        normalizedDeadline,
-        normalizedEstimatedLength,
+        lengthToDeadlineRatio,
         normalizedImportance,
       ];
 
-      normalizedItems[item.id] = normalizedValues;
+      itemFeatures[item.id] = normalizedValues;
     }
 
-// Calculate percentiles
-    List<List<double>> normalizedValuesList = normalizedItems.values.toList();
+    // Calculate percentiles
+    List<List<double>> itemFeatureList = itemFeatures.values.toList();
 
-// Sort by deadline
-    normalizedValuesList.sort((a, b) => a[0].compareTo(b[0]));
-    double urgencyP25 =
-        normalizedValuesList[(normalizedValuesList.length * 0.25).floor()][0];
-    double urgencyP75 =
-        normalizedValuesList[(normalizedValuesList.length * 0.75).floor()][0];
+    // Sort by deadline
+    itemFeatureList.sort((a, b) => a[0].compareTo(b[0]));
+    double lengthToDeadlineRatioP25 =
+        itemFeatureList[(itemFeatureList.length * 0.25).floor()][0];
+    double lengthToDeadlineRatioP75 =
+        itemFeatureList[(itemFeatureList.length * 0.75).floor()][0];
 
-// Sort by estimated length
-    normalizedValuesList.sort((a, b) => a[1].compareTo(b[1]));
-    double estimatedLengthP25 =
-        normalizedValuesList[(normalizedValuesList.length * 0.25).floor()][1];
-    double estimatedLengthP75 =
-        normalizedValuesList[(normalizedValuesList.length * 0.75).floor()][1];
-
-// Sort by importance
-    normalizedValuesList.sort((a, b) => a[2].compareTo(b[2]));
+    // Sort by importance
+    itemFeatureList.sort((a, b) => a[1].compareTo(b[1]));
     double importanceP25 =
-        normalizedValuesList[(normalizedValuesList.length * 0.25).floor()][2];
+        itemFeatureList[(itemFeatureList.length * 0.25).floor()][1];
     double importanceP75 =
-        normalizedValuesList[(normalizedValuesList.length * 0.75).floor()][2];
+        itemFeatureList[(itemFeatureList.length * 0.75).floor()][1];
 
-// Define shadow centroids
+    // Define shadow centroids
     List<List<double>> centroids = [
-      [urgencyP75, estimatedLengthP75, importanceP75], // Urgent & Important
-      [urgencyP25, estimatedLengthP25, importanceP75], // Not Urgent & Important
-      [urgencyP75, estimatedLengthP75, importanceP25], // Urgent & Not Important
-      [
-        urgencyP25,
-        estimatedLengthP25,
-        importanceP25
-      ], // Not Urgent & Not Important
+      [lengthToDeadlineRatioP75, importanceP75], // Urgent & Important
+      [lengthToDeadlineRatioP25, importanceP75], // Not Urgent & Important
+      [lengthToDeadlineRatioP75, importanceP25], // Urgent & Not Important
+      [lengthToDeadlineRatioP25, importanceP25], // Not Urgent & Not Important
     ];
 
     print("Centroids");
     print(centroids);
 
-// Classify items into quadrants
-    List<String> itemIds = normalizedItems.keys.toList();
+    // Classify items into quadrants
+    List<String> itemIds = itemFeatures.keys.toList();
     for (String itemId in itemIds) {
-      List<double> itemCoordinates = normalizedItems[itemId]!;
+      List<double> itemCoordinates = itemFeatures[itemId]!;
       double minDistance = double.infinity;
       int minIndex = 0;
 
@@ -180,7 +282,8 @@ class ItemManager extends ChangeNotifier {
           break;
       }
 
-      print("${items[itemId]?.title} - $quadrant");
+      print(
+          "${items[itemId]?.importance},${items[itemId]?.estimatedLength.inMinutes}min, ${items[itemId]?.deadline.difference(DateTime.now()).inDays}days, $quadrant");
       // Assign the quadrant index (0-3) to the item
       eisenhowerQuadrants[minIndex].add(itemId);
     }
