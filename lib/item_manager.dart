@@ -137,11 +137,11 @@ class ItemManager extends ChangeNotifier {
 
 // Define shadow centroids
     List<List<double>> centroids = [
-      [urgencyP25, estimatedLengthP25, importanceP75], // Urgent & Important
-      [urgencyP75, estimatedLengthP25, importanceP75], // Not Urgent & Important
-      [urgencyP25, estimatedLengthP25, importanceP25], // Urgent & Not Important
+      [urgencyP75, estimatedLengthP75, importanceP75], // Urgent & Important
+      [urgencyP25, estimatedLengthP25, importanceP75], // Not Urgent & Important
+      [urgencyP75, estimatedLengthP75, importanceP25], // Urgent & Not Important
       [
-        urgencyP75,
+        urgencyP25,
         estimatedLengthP25,
         importanceP25
       ], // Not Urgent & Not Important
@@ -165,6 +165,22 @@ class ItemManager extends ChangeNotifier {
         }
       }
 
+      String quadrant = "Urgent and Important";
+      switch (minIndex) {
+        case 1:
+          quadrant = "Not Urgent and Important";
+          break;
+        case 2:
+          quadrant = "Urgent and Not Important";
+          break;
+        case 3:
+          quadrant = "Not Urgent and Not Important";
+          break;
+        default:
+          break;
+      }
+
+      print("${items[itemId]?.title} - $quadrant");
       // Assign the quadrant index (0-3) to the item
       eisenhowerQuadrants[minIndex].add(itemId);
     }
