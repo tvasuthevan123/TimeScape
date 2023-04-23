@@ -8,20 +8,20 @@ import 'package:uuid/uuid.dart';
 
 const timeLeeway = Duration(days: 3);
 
-class ItemManager extends ChangeNotifier {
+class EntryManager extends ChangeNotifier {
   /// Internal, private state of the cart.
-  final Map<String, Item> _items = {};
-  UnmodifiableMapView<String, Item> get items =>
-      UnmodifiableMapView<String, Item>(_items);
+  final Map<String, Entry> _entries = {};
+  UnmodifiableMapView<String, Entry> get entries =>
+      UnmodifiableMapView<String, Entry>(_entries);
 
-  ItemManager({Key? key}) {
-    _generateItems(1);
-    _generateItems(2);
-    _generateItems(5);
-    _generateItems(8);
+  EntryManager({Key? key}) {
+    _generateEntrys(1);
+    _generateEntrys(2);
+    _generateEntrys(5);
+    _generateEntrys(8);
   }
 
-  void _generateItems(int importance) {
+  void _generateEntrys(int importance) {
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 4; j++) {
         int estimatedLength = (i + 1) * 5;
@@ -40,10 +40,10 @@ class ItemManager extends ChangeNotifier {
         }
 
         DateTime deadline = DateTime.now().add(Duration(days: days));
-        addItem(Item(
-          title: 'Item $importance-$estimatedLength-$days',
+        addEntry(Task(
+          id: '',
+          title: 'Entry $importance-$estimatedLength-$days',
           description: 'Description for item $importance-${i + 1}-${j + 1}',
-          type: ItemType.task,
           isCompleted: false,
           isSoftDeadline: true,
           deadline: deadline,
@@ -66,8 +66,8 @@ class ItemManager extends ChangeNotifier {
     return sqrt(sum);
   }
 
-//   List<List<String>> classifyItemsIntoQuadrants() {
-//     List<Item> itemList = _items.values.toList();
+//   List<List<String>> classifyEntrysIntoQuadrants() {
+//     List<Entry> taskList = _items.values.toList();
 //     List<List<String>> eisenhowerQuadrants = [
 //       [], // Urgent & Important
 //       [], // Not Urgent & Important
@@ -76,21 +76,21 @@ class ItemManager extends ChangeNotifier {
 //     ];
 
 //     // Normalize features
-//     DateTime maxDeadline = itemList.fold(
-//         itemList[0].deadline,
+//     DateTime maxDeadline = taskList.fold(
+//         taskList[0].deadline,
 //         (prev, current) =>
 //             current.deadline.isAfter(prev) ? current.deadline : prev);
-//     Duration maxEstimatedLength = itemList.fold(
-//         itemList[0].estimatedLength,
+//     Duration maxEstimatedLength = taskList.fold(
+//         taskList[0].estimatedLength,
 //         (prev, current) =>
 //             current.estimatedLength > prev ? current.estimatedLength : prev);
-//     double maxImportance = itemList.fold(
-//         itemList[0].importance,
+//     double maxImportance = taskList.fold(
+//         taskList[0].importance,
 //         (prev, current) =>
 //             current.importance > prev ? current.importance : prev);
 
-//     Map<String, List<double>> normalizedItems = Map();
-//     for (Item item in itemList) {
+//     Map<String, List<double>> normalizedEntrys = Map();
+//     for (Entry item in taskList) {
 //       double normalizedDeadline = _minMaxNormalization(
 //           maxDeadline.difference(item.deadline).inMilliseconds.toDouble(),
 //           0,
@@ -108,11 +108,11 @@ class ItemManager extends ChangeNotifier {
 //         normalizedImportance,
 //       ];
 
-//       normalizedItems[item.id] = normalizedValues;
+//       normalizedEntrys[item.id] = normalizedValues;
 //     }
 
 // // Calculate percentiles
-//     List<List<double>> normalizedValuesList = normalizedItems.values.toList();
+//     List<List<double>> normalizedValuesList = normalizedEntrys.values.toList();
 
 // // Sort by deadline
 //     normalizedValuesList.sort((a, b) => a[0].compareTo(b[0]));
@@ -151,9 +151,9 @@ class ItemManager extends ChangeNotifier {
 //     print(centroids);
 
 // // Classify items into quadrants
-//     List<String> itemIds = normalizedItems.keys.toList();
+//     List<String> itemIds = normalizedEntrys.keys.toList();
 //     for (String itemId in itemIds) {
-//       List<double> itemCoordinates = normalizedItems[itemId]!;
+//       List<double> itemCoordinates = normalizedEntrys[itemId]!;
 //       double minDistance = double.infinity;
 //       int minIndex = 0;
 
@@ -189,12 +189,12 @@ class ItemManager extends ChangeNotifier {
 //     return eisenhowerQuadrants;
 //   }
 
-  List<List<String>> classifyItemsIntoQuadrants() {
-    List<Item> itemList = _items.values.toList();
+  List<List<String>> classifyTasksIntoQuadrants() {
+    List<Task> taskList = _entries.values.whereType<Task>().toList();
 
-    if (itemList.length < 10) {
-      itemList.sort((a, b) => a.deadline.compareTo(b.deadline));
-      return [itemList.map((item) => item.id).toList(), [], [], []];
+    if (taskList.length < 10) {
+      taskList.sort((a, b) => a.deadline.compareTo(b.deadline));
+      return [taskList.map((item) => item.id).toList(), [], [], []];
     }
 
     List<List<String>> eisenhowerQuadrants = [
@@ -204,13 +204,13 @@ class ItemManager extends ChangeNotifier {
       [], // Not Urgent & Not Important
     ];
 
-    double maxImportance = itemList.fold(
-        itemList[0].importance,
+    double maxImportance = taskList.fold(
+        taskList[0].importance,
         (prev, current) =>
             current.importance > prev ? current.importance : prev);
 
     Map<String, List<double>> itemFeatures = {};
-    for (Item item in itemList) {
+    for (Task item in taskList) {
       double lengthToDeadlineRatio = item.estimatedLength.inMinutes /
           item.deadline.difference(DateTime.now()).inMinutes;
       double normalizedImportance =
@@ -249,9 +249,6 @@ class ItemManager extends ChangeNotifier {
       [lengthToDeadlineRatioP25, importanceP25], // Not Urgent & Not Important
     ];
 
-    print("Centroids");
-    print(centroids);
-
     // Classify items into quadrants
     List<String> itemIds = itemFeatures.keys.toList();
     for (String itemId in itemIds) {
@@ -267,182 +264,95 @@ class ItemManager extends ChangeNotifier {
         }
       }
 
-      String quadrant = "Urgent and Important";
-      switch (minIndex) {
-        case 1:
-          quadrant = "Not Urgent and Important";
-          break;
-        case 2:
-          quadrant = "Urgent and Not Important";
-          break;
-        case 3:
-          quadrant = "Not Urgent and Not Important";
-          break;
-        default:
-          break;
-      }
+      // String quadrant = "Urgent and Important";
+      // switch (minIndex) {
+      //   case 1:
+      //     quadrant = "Not Urgent and Important";
+      //     break;
+      //   case 2:
+      //     quadrant = "Urgent and Not Important";
+      //     break;
+      //   case 3:
+      //     quadrant = "Not Urgent and Not Important";
+      //     break;
+      //   default:
+      //     break;
+      // }
 
-      print(
-          "${items[itemId]?.importance},${items[itemId]?.estimatedLength.inMinutes}min, ${items[itemId]?.deadline.difference(DateTime.now()).inDays}days, $quadrant");
+      // print(
+      //     "${items[itemId]?.importance},${items[itemId]?.estimatedLength.inMinutes}min, ${items[itemId]?.deadline.difference(DateTime.now()).inDays}days, $quadrant");
       // Assign the quadrant index (0-3) to the item
       eisenhowerQuadrants[minIndex].add(itemId);
+    }
+
+    for (List<String> quadrant in eisenhowerQuadrants) {
+      quadrant.sort((a, b) {
+        final taskA = entries[a] as Task;
+        final taskB = entries[b] as Task;
+        return taskA.deadline.compareTo(taskB.deadline);
+      });
     }
 
     return eisenhowerQuadrants;
   }
 
-  Future<void> loadItemsFromDatabase() async {
-    final items = await DatabaseHelper().getItems();
+  Future<void> loadEntrysFromDatabase() async {
+    final tasks = await DatabaseHelper().getTasks();
 
-    for (final item in items) {
-      _items[item.id] = item;
+    for (final tasks in tasks) {
+      _entries[tasks.id] = tasks;
     }
 
     notifyListeners();
   }
 
-  void addItem(Item item) {
-    _items[item.id] = item;
+  void addEntry(Entry item) {
+    _entries[item.id] = item;
     notifyListeners();
   }
 
-  void removeItem(String itemId) {
-    _items.remove(itemId);
+  void removeEntry(String itemId) {
+    _entries.remove(itemId);
     notifyListeners();
   }
 
-  Item? getItem(String itemId) {
-    return _items[itemId];
+  Entry? getEntry(String itemId) {
+    return _entries[itemId];
   }
 
   /// Removes all items from the cart.
   void removeAll() {
-    _items.clear();
+    _entries.clear();
     // This call tells the widgets that are listening to this model to rebuild.
     notifyListeners();
   }
+}
 
-  List<List<String>> sortItemsByEisenhowerMatrix({int maxIterations = 10}) {
-    // Define the number of clusters and maximum iterations
-    const int numClusters = 4;
+enum EntryType {
+  task,
+  reminder,
+  event,
+}
 
-    // Initialize the clusters with random values
-    final List<List<Item>> clusters = [];
-    for (int i = 0; i < numClusters; i++) {
-      clusters.add([]);
+abstract class Entry {
+  late String id;
+  late String title;
+  late String description;
+  late EntryType type;
+
+  Entry({
+    String? id,
+    required this.title,
+    required this.description,
+    required this.type,
+  }) {
+    if (id == '' || id == null) {
+      this.id = const Uuid().v4();
     }
-
-    // Define the distance function to calculate the distance between two items
-    double distance(Item item1, Item item2) {
-      double urgencyDiff = item1.urgency - item2.urgency;
-      double importanceDiff = item1.importance - item2.importance;
-      return sqrt(pow(urgencyDiff, 2) + pow(importanceDiff, 2));
-    }
-
-// Initialize the cluster centers with random data points
-    final List<Item> initialCenters = _items.values.toList()..shuffle();
-    for (int i = 0; i < numClusters; i++) {
-      clusters[i].add(initialCenters[i]);
-    }
-
-// Iterate until convergence or maximum iterations are reached
-    int iteration = 0;
-    bool converged = false;
-    while (!converged && iteration < maxIterations) {
-      iteration++;
-
-      // Assign each item to the closest cluster
-      for (final item in _items.values) {
-        double minDistance = double.infinity;
-        int closestClusterIndex = 0;
-        for (int i = 0; i < numClusters; i++) {
-          double clusterDistance = distance(item, clusters[i].first);
-          if (clusterDistance < minDistance) {
-            minDistance = clusterDistance;
-            closestClusterIndex = i;
-          }
-        }
-        clusters[closestClusterIndex].add(item);
-      }
-
-      // Update the urgency and importance values of each cluster based on the items
-      bool centersChanged = false;
-      for (int i = 0; i < numClusters; i++) {
-        double sumUrgency = 0;
-        double sumImportance = 0;
-        for (final item in clusters[i]) {
-          sumUrgency += item.urgency;
-          sumImportance += item.importance;
-        }
-        int clusterSize = clusters[i].length;
-        if (clusterSize > 0) {
-          double averageUrgency = sumUrgency / clusterSize;
-          double averageImportance = sumImportance / clusterSize;
-          if (clusters[i].first.urgency != averageUrgency ||
-              clusters[i].first.importance != averageImportance) {
-            centersChanged = true;
-          }
-          clusters[i].first.urgency = averageUrgency;
-          clusters[i].first.importance = averageImportance;
-        }
-      }
-
-      // Check convergence based on cluster center changes
-      if (!centersChanged) {
-        converged = true;
-      } else {
-        // Clear the clusters for the next iteration
-        for (int i = 0; i < numClusters; i++) {
-          clusters[i].clear();
-          clusters[i].add(initialCenters[i]);
-        }
-      }
-    }
-
-    // Create 4 lists of strings, each containing the IDs of the items in that quadrant
-    final List<String> quadrant1 = [];
-    final List<String> quadrant2 = [];
-    final List<String> quadrant3 = [];
-    final List<String> quadrant4 = [];
-
-    for (final item in _items.values) {
-      double minDistance = double.infinity;
-      int closestClusterIndex = 0;
-      for (int i = 0; i < numClusters; i++) {
-        double clusterDistance = distance(item, clusters[i].first);
-        if (clusterDistance < minDistance) {
-          minDistance = clusterDistance;
-          closestClusterIndex = i;
-        }
-      }
-      switch (closestClusterIndex) {
-        case 0:
-          quadrant1.add(item.id);
-          break;
-        case 1:
-          quadrant2.add(item.id);
-          break;
-        case 2:
-          quadrant3.add(item.id);
-          break;
-        case 3:
-          quadrant4.add(item.id);
-          break;
-      }
-    }
-
-    // Return the 4 lists of IDs
-    return [quadrant1, quadrant2, quadrant3, quadrant4];
   }
 }
 
-enum ItemType { task, reminder }
-
-class Item {
-  String id;
-  String title;
-  String description;
-  ItemType type;
+class Task extends Entry {
   bool isCompleted;
   bool isSoftDeadline;
   DateTime deadline;
@@ -452,12 +362,31 @@ class Item {
   double urgency = 0;
   double importance = 0;
 
+  Task({
+    String? id,
+    required String title,
+    required String description,
+    required this.deadline,
+    required this.estimatedLength,
+    this.isCompleted = false,
+    this.isSoftDeadline = false,
+    this.timeSpent = Duration.zero,
+    this.urgency = 0,
+    this.importance = 0,
+  }) : super(
+          id: id,
+          title: title,
+          description: description,
+          type: EntryType.task,
+        ) {
+    calculateUrgency();
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'title': title,
       'description': description,
-      'type': type.index,
       'is_completed': isCompleted ? 1 : 0,
       'is_soft_deadline': isSoftDeadline ? 1 : 0,
       'deadline': deadline.millisecondsSinceEpoch,
@@ -468,11 +397,10 @@ class Item {
     };
   }
 
-  static Item fromMap(Map<String, dynamic> map) {
-    return Item(
+  static Task fromMap(Map<String, dynamic> map) {
+    return Task(
       title: map['title'],
       description: map['description'],
-      type: ItemType.values[map['type']],
       isCompleted: map['is_completed'] == 1,
       isSoftDeadline: map['is_soft_deadline'] == 1,
       deadline: DateTime.fromMillisecondsSinceEpoch(map['deadline']),
@@ -482,38 +410,6 @@ class Item {
       importance: map['importance'],
       id: map['id'],
     );
-  }
-
-  Item({
-    required this.title,
-    required this.description,
-    required this.type,
-    required this.deadline,
-    this.isCompleted = false,
-    required this.estimatedLength,
-    this.isSoftDeadline = false,
-    this.id = '',
-    this.timeSpent = Duration.zero,
-    this.urgency = 0,
-    this.importance = 0,
-  }) {
-    calculateUrgency();
-    if (id == '') {
-      id = const Uuid().v4();
-    }
-  }
-
-  void editTitle(String title) {
-    this.title = title;
-  }
-
-  void editDescription(String description) {
-    this.description = description;
-  }
-
-  void editType(ItemType type) {
-    this.type = type;
-    calculateUrgency();
   }
 
   void editCompleted(bool isCompleted) {
@@ -536,7 +432,7 @@ class Item {
   }
 
   void calculateUrgency() {
-    if (isCompleted || type != ItemType.task) return;
+    if (isCompleted) return;
 
     print("Deadline: ${deadline}");
     print("Minutes to deadline: ${calculateMinutes(DateTime.now(), deadline)}");
@@ -556,4 +452,61 @@ class Item {
     urgency = weightLength * estimatedLength.inMinutes +
         weightDeadline * timeTillDeadline;
   }
+}
+
+class Reminder extends Entry {
+  DateTime time;
+
+  Reminder({
+    String? id,
+    required String title,
+    required String description,
+    required this.time,
+  }) : super(
+          id: id,
+          title: title,
+          description: description,
+          type: EntryType.reminder,
+        );
+}
+
+class Event extends Entry {
+  DateTime startTime;
+  Duration length;
+  Recurrence recurrence;
+  Duration reminderTimeBeforeEvent;
+
+  Event({
+    String? id,
+    required String title,
+    required String description,
+    required this.startTime,
+    required this.length,
+    required this.recurrence,
+    required this.reminderTimeBeforeEvent,
+  }) : super(
+          id: id,
+          title: title,
+          description: description,
+          type: EntryType.event,
+        );
+}
+
+enum RecurrenceType {
+  daily,
+  weekly,
+  monthly,
+  yearly,
+}
+
+class Recurrence {
+  RecurrenceType type;
+  List<int> daysOfWeek;
+  int interval;
+
+  Recurrence({
+    required this.type,
+    required this.daysOfWeek,
+    required this.interval,
+  });
 }

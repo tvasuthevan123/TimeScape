@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class ItemBlock extends StatelessWidget {
+class TaskBlock extends StatelessWidget {
   final String text;
 
-  const ItemBlock({Key? key, required this.text}) : super(key: key);
+  const TaskBlock({Key? key, required this.text}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

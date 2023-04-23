@@ -28,7 +28,11 @@ class _ToggleButtonSelectionState extends State<ToggleButtonSelection> {
   @override
   Widget build(BuildContext context) {
     return ToggleButtons(
-      isSelected: [_selectedButtonIndex == 0, _selectedButtonIndex == 1],
+      isSelected: [
+        _selectedButtonIndex == 0,
+        _selectedButtonIndex == 1,
+        _selectedButtonIndex == 2
+      ],
       selectedColor: Colors.white,
       color: Colors.blue,
       fillColor: Colors.lightBlue.shade900,
@@ -44,6 +48,7 @@ class _ToggleButtonSelectionState extends State<ToggleButtonSelection> {
       children: const [
         Text('Task'),
         Text('Reminder'),
+        Text('Event'),
       ],
     );
   }

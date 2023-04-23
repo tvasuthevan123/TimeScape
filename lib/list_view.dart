@@ -9,21 +9,21 @@ import 'dart:math';
 
 import 'item_manager.dart';
 
-class ItemListView extends StatelessWidget {
-  final ItemType type;
-  const ItemListView({super.key, required this.type});
+class EntryListView extends StatelessWidget {
+  final EntryType entryType;
+  const EntryListView({super.key, required this.entryType});
   @override
   Widget build(BuildContext context) {
-    return Consumer<ItemManager>(
+    return Consumer<EntryManager>(
       builder: (context, itemManager, child) {
         // Use yourProvider data to build your widget tree here
-        final items = itemManager.items.values
-            .where((item) => item.type == type)
+        final items = itemManager.entries.values
+            .where((entry) => entry.type == entryType)
             .toList()
             .reversed
             .toList();
-        final itemKeys = itemManager.items.keys
-            .where((key) => itemManager.items[key]!.type == type)
+        final itemKeys = itemManager.entries.keys
+            .where((key) => itemManager.entries[key]!.type == entryType)
             .toList()
             .reversed
             .toList();
@@ -51,7 +51,6 @@ class ItemListView extends StatelessWidget {
                 onPressed: () {
                   String itemTitle = '';
                   String itemDescription = '';
-                  ItemType itemType = ItemType.task;
                   DateTime deadline = DateTime.now();
                   Duration duration = const Duration(hours: 0, minutes: 15);
                   showModalBottomSheet(
@@ -110,11 +109,7 @@ class ItemListView extends StatelessWidget {
                                 padding: const EdgeInsets.all(8.0),
                                 child: ToggleButtonSelection(
                                   onPressCallback: (selected) {
-                                    if (selected == 0) {
-                                      itemType = ItemType.task;
-                                    } else {
-                                      itemType = ItemType.reminder;
-                                    }
+                                    _selected = selected;
                                   },
                                 ),
                               ),
@@ -139,18 +134,17 @@ class ItemListView extends StatelessWidget {
                                 padding: const EdgeInsets.all(8.0),
                                 child: ElevatedButton(
                                   onPressed: () async {
-                                    Item item = Item(
+                                    Task item = Task(
                                       title: itemTitle,
                                       description: itemDescription,
-                                      type: itemType,
                                       deadline: deadline,
                                       estimatedLength: duration,
                                     );
-                                    Provider.of<ItemManager>(context,
+                                    Provider.of<EntryManager>(context,
                                             listen: false)
-                                        .addItem(item);
+                                        .addEntry(item);
                                     Navigator.pop(context);
-                                    await DatabaseHelper().addItem(item);
+                                    await DatabaseHelper().addTask(item);
                                   },
                                   child: const Text('Submit'),
                                 ),

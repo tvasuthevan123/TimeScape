@@ -24,21 +24,21 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await (DatabaseHelper().database);
 
-  // Create an instance of the ItemManager and load items from the database.
-  final itemManager = ItemManager();
-  await itemManager.loadItemsFromDatabase();
+  // Create an instance of the EntryManager and load items from the database.
+  final itemManager = EntryManager();
+  await itemManager.loadTasksFromDatabase();
   runApp(MyApp(itemManager: itemManager));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key, required this.itemManager}) : super(key: key);
 
-  final ItemManager itemManager;
+  final EntryManager itemManager;
 
   final primaryColor = const Color.fromRGBO(0, 39, 41, 1);
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<ItemManager>.value(
+    return ChangeNotifierProvider<EntryManager>.value(
       value: itemManager,
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -116,7 +116,7 @@ class _MyHomePageState extends State<MyHomePage>
                             padding: EdgeInsets.only(
                               top: _isShowing ? 40 + buttonHeight : 40,
                             ),
-                            child: const ItemListView(type: ItemType.task),
+                            child: const TaskListView(type: TaskType.task),
                           ),
                         ),
                         Center(
@@ -125,7 +125,7 @@ class _MyHomePageState extends State<MyHomePage>
                             padding: EdgeInsets.only(
                               top: _isShowing ? 40 + buttonHeight : 40,
                             ),
-                            child: const ItemListView(type: ItemType.reminder),
+                            child: const TaskListView(type: TaskType.reminder),
                           ),
                         ),
                         Center(

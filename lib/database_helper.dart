@@ -57,29 +57,29 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> addItem(Item item) async {
+  Future<int> addTask(Task item) async {
     final db = await database;
 
     return db.insert('items', item.toMap());
   }
 
-  Future<List<Item>> getItems() async {
+  Future<List<Task>> getTasks() async {
     final db = await database;
     final maps = await db.query('items');
 
     return List.generate(maps.length, (i) {
-      return Item.fromMap(maps[i]);
+      return Task.fromMap(maps[i]);
     });
   }
 
-  Future<int> updateItem(Item item) async {
+  Future<int> updateTask(Task item) async {
     final db = await database;
 
     return db
         .update('items', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
   }
 
-  Future<int> deleteItem(Item item) async {
+  Future<int> deleteTask(Task item) async {
     final db = await database;
 
     return db.delete('items', where: 'id = ?', whereArgs: [item.id]);

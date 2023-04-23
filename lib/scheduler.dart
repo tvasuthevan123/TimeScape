@@ -23,10 +23,10 @@ class TimeBlock {
       : assignments = List.empty(growable: true);
 }
 
-List<TimeBlock> scheduler(UnmodifiableMapView<String, Item> items,
+List<TimeBlock> scheduler(UnmodifiableMapView<String, Task> items,
     List<TimeBlock> timeBlocks, int breakTime) {
   for (String itemID in items.keys.toList()) {
-    Item item = items[itemID]!;
+    Task item = items[itemID]!;
     Duration unassignedDuration = item.estimatedLength;
     for (TimeBlock block in timeBlocks) {
       int availability = timeAvailable(unassignedDuration, block);

@@ -5,9 +5,34 @@ import 'package:timescape/item_manager.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 
+class TaskTileColors {
+  final Color tileColor;
+  final Color tileBorderColor;
+  final Color innerTileColor;
+  final Color innerTileFontColor;
+
+  const TaskTileColors({
+    required this.tileColor,
+    required this.tileBorderColor,
+    required this.innerTileColor,
+    required this.innerTileFontColor,
+  });
+}
+
 class TaskTile extends StatefulWidget {
-  final Item item;
-  const TaskTile({Key? key, required this.item}) : super(key: key);
+  final Entry item;
+  final TaskTileColors colors;
+
+  const TaskTile({
+    Key? key,
+    required this.item,
+    this.colors = const TaskTileColors(
+      tileColor: Color.fromRGBO(0, 78, 82, 1),
+      tileBorderColor: Color.fromRGBO(0, 39, 41, 1),
+      innerTileColor: Color.fromRGBO(214, 253, 255, 1),
+      innerTileFontColor: Color.fromRGBO(0, 58, 61, 1),
+    ),
+  }) : super(key: key);
 
   @override
   State<TaskTile> createState() => _TaskTileState();
@@ -20,7 +45,7 @@ class _TaskTileState extends State<TaskTile>
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    return Consumer<ItemManager>(builder: (context, itemManager, child) {
+    return Consumer<EntryManager>(builder: (context, entryManager, child) {
       return Padding(
         padding: const EdgeInsets.all(10),
         child: GestureDetector(
@@ -42,10 +67,10 @@ class _TaskTileState extends State<TaskTile>
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10.0),
                     border: Border.all(
-                      color: const Color.fromRGBO(0, 39, 41, 1),
+                      color: widget.colors.tileBorderColor,
                       width: 2.0,
                     ),
-                    color: const Color.fromRGBO(214, 253, 255, 1),
+                    color: widget.colors.innerTileColor,
                   ),
                   child: ClipRect(
                     child: OverflowBox(
@@ -58,45 +83,50 @@ class _TaskTileState extends State<TaskTile>
                           children: [
                             Text(
                               "Description: ${widget.item.description}",
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
-                                color: Color.fromRGBO(0, 58, 61, 1),
+                                color: widget.colors.innerTileFontColor,
                               ),
                             ),
                             const Divider(
                               thickness: 1,
                             ),
-                            Text(
-                              "Deadline: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(widget.item.deadline)}",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Color.fromRGBO(0, 58, 61, 1),
+                            if (widget.item.type == EntryType.task)
+                              Text(
+                                "Deadline: ${DateFormat('yyyy-MM-dd HH:mm:ss').format((widget.item as Task).deadline)}",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: widget.colors.innerTileFontColor,
+                                ),
                               ),
-                            ),
-                            const Divider(
-                              thickness: 1,
-                            ),
-                            Text(
-                              "Estimated Length: ${widget.item.estimatedLength.toString().split('.').first.padLeft(8, "0")}",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Color.fromRGBO(0, 58, 61, 1),
+                            if (widget.item.type == EntryType.task)
+                              const Divider(
+                                thickness: 1,
                               ),
-                            ),
-                            const Divider(
-                              thickness: 1,
-                            ),
-                            Text(
-                              "N Weight Urgency: ${widget.item.urgency}",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Color.fromRGBO(0, 58, 61, 1),
+                            if (widget.item.type == EntryType.task)
+                              Text(
+                                "Estimated Length: ${(widget.item as Task).estimatedLength.toString().split('.').first.padLeft(8, "0")}",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: widget.colors.innerTileFontColor,
+                                ),
                               ),
-                            ),
+                            if (widget.item.type == EntryType.task)
+                              const Divider(
+                                thickness: 1,
+                              ),
+                            if (widget.item.type == EntryType.task)
+                              Text(
+                                "N Weight Urgency: ${(widget.item as Task).urgency}",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: widget.colors.innerTileFontColor,
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -114,8 +144,9 @@ class _TaskTileState extends State<TaskTile>
                     // A SlidableAction can have an icon and/or a label.
                     SlidableAction(
                       onPressed: (BuildContext context) async {
-                        itemManager.removeItem(widget.item.id);
-                        await DatabaseHelper().deleteItem(widget.item);
+                        entryManager.removeEntry(widget.item.id);
+                        await DatabaseHelper()
+                            .deleteTask((widget.item as Task));
                       },
                       backgroundColor: Color(0xFFFE4A49),
                       foregroundColor: Colors.white,
@@ -139,10 +170,10 @@ class _TaskTileState extends State<TaskTile>
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10.0),
                         border: Border.all(
-                          color: const Color.fromRGBO(0, 39, 41, 1),
+                          color: widget.colors.tileBorderColor,
                           width: 2.0,
                         ),
-                        color: const Color.fromRGBO(0, 78, 82, 1),
+                        color: widget.colors.tileColor,
                       ),
                       padding: const EdgeInsets.all(16),
                       child: Text(
