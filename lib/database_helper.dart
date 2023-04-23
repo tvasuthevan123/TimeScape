@@ -1,31 +1,40 @@
+import 'dart:io';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:timescape/item_manager.dart';
-import 'package:timescape/scheduler.dart';
+// import 'package:timescape/scheduler.dart';
 
 class DatabaseHelper {
-  static late Database _database;
+  static const String dbName = 'timescape.db';
+
+  static Database? _database;
 
   Future<Database> get database async {
-    if (_database != null) {
-      return _database;
+    final documentsDirectory = await getApplicationDocumentsDirectory();
+    final path = join(documentsDirectory.path, dbName);
+    print(path);
+    // Directory(path).delete(recursive: true);
+    if ((await databaseExists(path)) == true) {
+      _database = await openDatabase(path);
+      return _database!;
     }
 
     _database = await _initDatabase();
-    return _database;
+    return _database!;
   }
 
   Future<Database> _initDatabase() async {
     final documentsDirectory = await getApplicationDocumentsDirectory();
-    final path = join(documentsDirectory.path, 'my_database.db');
+    final path = join(documentsDirectory.path, dbName);
 
     return openDatabase(
       path,
       version: 1,
       onCreate: (db, version) async {
         await db.execute('CREATE TABLE items ('
-            'id STRING PRIMARY KEY'
+            'id STRING PRIMARY KEY, '
             'title TEXT, '
             'description TEXT, '
             'type INTEGER, '
@@ -39,8 +48,8 @@ class DatabaseHelper {
             ')');
 
         await db.execute('CREATE TABLE assignments ('
-            'id STRING PRIMARY KEY '
-            'time INTEGER, '
+            'id STRING PRIMARY KEY, '
+            'timestamp INTEGER, '
             'duration INTEGER, '
             'FOREIGN KEY(id) REFERENCES items(id)'
             ')');

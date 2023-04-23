@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:timescape/database_helper.dart';
 import 'package:timescape/date_picker.dart';
 import 'package:timescape/duration_picker.dart';
 import 'package:timescape/task_tile.dart';
@@ -16,24 +17,27 @@ class ItemListView extends StatelessWidget {
     return Consumer<ItemManager>(
       builder: (context, itemManager, child) {
         // Use yourProvider data to build your widget tree here
-        final items = itemManager.items.values.toList().reversed.toList();
-        final itemKeys = itemManager.items.keys.toList().reversed.toList();
+        final items = itemManager.items.values
+            .where((item) => item.type == type)
+            .toList()
+            .reversed
+            .toList();
+        final itemKeys = itemManager.items.keys
+            .where((key) => itemManager.items[key]!.type == type)
+            .toList()
+            .reversed
+            .toList();
         return Stack(
           children: [
             ListView.builder(
-              itemCount: itemManager.items.length,
+              itemCount: items.length,
               itemBuilder: (context, index) {
                 final item = items[index];
                 print("Keys: ${itemKeys[index]}");
-                if (item.type == type) {
-                  return Center(
-                    child: TaskTile(
-                      key: Key(itemKeys[index]),
-                      item: item,
-                    ),
-                  );
-                }
-                return null;
+                return TaskTile(
+                  key: Key(itemKeys[index]),
+                  item: item,
+                );
               },
             ),
             Positioned(
@@ -134,7 +138,7 @@ class ItemListView extends StatelessWidget {
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: ElevatedButton(
-                                  onPressed: () {
+                                  onPressed: () async {
                                     Item item = Item(
                                       title: itemTitle,
                                       description: itemDescription,
@@ -146,6 +150,7 @@ class ItemListView extends StatelessWidget {
                                             listen: false)
                                         .addItem(item);
                                     Navigator.pop(context);
+                                    await DatabaseHelper().addItem(item);
                                   },
                                   child: const Text('Submit'),
                                 ),

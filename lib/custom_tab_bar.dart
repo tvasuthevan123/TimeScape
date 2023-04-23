@@ -63,6 +63,22 @@ class CustomTabBar extends StatelessWidget {
               ),
             ),
           ),
+          Tab(
+            child: SizedBox(
+              width: 40.0,
+              height: 40.0,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10.0),
+                  border: Border.all(
+                    color: const Color.fromRGBO(0, 39, 41, 1),
+                    width: 2.0,
+                  ),
+                ),
+                child: const Icon(Icons.table_view),
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:timescape/database_helper.dart';
+import 'package:timescape/eisenhower_display.dart';
 import 'package:timescape/item_manager.dart';
 import 'package:timescape/list_view.dart';
 import 'package:timescape/scheduler.dart';
@@ -19,6 +20,8 @@ void main() async {
         statusBarColor: Color.fromARGB(255, 235, 254, 255)),
   );
   // Initialize the database.
+
+  WidgetsFlutterBinding.ensureInitialized();
   await (DatabaseHelper().database);
 
   // Create an instance of the ItemManager and load items from the database.
@@ -93,7 +96,7 @@ class _MyHomePageState extends State<MyHomePage>
     double maxHeight = MediaQuery.of(context).size.height;
     return DefaultTabController(
       initialIndex: 1,
-      length: 3,
+      length: 4,
       child: SafeArea(
         child: Material(
           child: Stack(
@@ -132,6 +135,15 @@ class _MyHomePageState extends State<MyHomePage>
                               top: _isShowing ? 40 + buttonHeight : 40,
                             ),
                             child: DayView(),
+                          ),
+                        ),
+                        Center(
+                          child: AnimatedPadding(
+                            duration: const Duration(milliseconds: 400),
+                            padding: EdgeInsets.only(
+                              top: _isShowing ? 40 + buttonHeight : 40,
+                            ),
+                            child: EisenhowerMatrix(),
                           ),
                         ),
                       ],

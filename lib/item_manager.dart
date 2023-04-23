@@ -14,6 +14,164 @@ class ItemManager extends ChangeNotifier {
   UnmodifiableMapView<String, Item> get items =>
       UnmodifiableMapView<String, Item>(_items);
 
+  ItemManager({Key? key}) {
+    _generateItems(1);
+    _generateItems(2);
+    _generateItems(5);
+    _generateItems(8);
+  }
+
+  void _generateItems(int importance) {
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 4; j++) {
+        int estimatedLength = (i + 1) * 5;
+        int days = 4;
+
+        switch (j) {
+          case 1:
+            days = 8;
+            break;
+          case 2:
+            days = 12;
+            break;
+          case 3:
+            days = 20;
+            break;
+        }
+
+        DateTime deadline = DateTime.now().add(Duration(days: days));
+        addItem(Item(
+          title: 'Item $importance-$estimatedLength-$days',
+          description: 'Description for item $importance-${i + 1}-${j + 1}',
+          type: ItemType.task,
+          isCompleted: false,
+          isSoftDeadline: true,
+          deadline: deadline,
+          estimatedLength: Duration(minutes: estimatedLength),
+          importance: importance.toDouble(),
+        ));
+      }
+    }
+  }
+
+  double _minMaxNormalization(double value, double min, double max) {
+    return (value - min) / (max - min);
+  }
+
+  double _euclideanDistance(List<double> pointA, List<double> pointB) {
+    double sum = 0;
+    for (int i = 0; i < pointA.length; i++) {
+      sum += pow(pointA[i] - pointB[i], 2);
+    }
+    return sqrt(sum);
+  }
+
+  List<List<String>> classifyItemsIntoQuadrants() {
+    List<Item> itemList = _items.values.toList();
+    List<List<String>> eisenhowerQuadrants = [
+      [], // Urgent & Important
+      [], // Not Urgent & Important
+      [], // Urgent & Not Important
+      [], // Not Urgent & Not Important
+    ];
+
+    // Normalize features
+    DateTime maxDeadline = itemList.fold(
+        itemList[0].deadline,
+        (prev, current) =>
+            current.deadline.isAfter(prev) ? current.deadline : prev);
+    Duration maxEstimatedLength = itemList.fold(
+        itemList[0].estimatedLength,
+        (prev, current) =>
+            current.estimatedLength > prev ? current.estimatedLength : prev);
+    double maxImportance = itemList.fold(
+        itemList[0].importance,
+        (prev, current) =>
+            current.importance > prev ? current.importance : prev);
+
+    Map<String, List<double>> normalizedItems = Map();
+    for (Item item in itemList) {
+      double normalizedDeadline = _minMaxNormalization(
+          maxDeadline.difference(item.deadline).inMilliseconds.toDouble(),
+          0,
+          maxDeadline.difference(DateTime.now()).inMilliseconds.toDouble());
+      double normalizedEstimatedLength = _minMaxNormalization(
+          item.estimatedLength.inMilliseconds.toDouble(),
+          0,
+          maxEstimatedLength.inMilliseconds.toDouble());
+      double normalizedImportance =
+          _minMaxNormalization(item.importance, 0, maxImportance);
+
+      List<double> normalizedValues = [
+        normalizedDeadline,
+        normalizedEstimatedLength,
+        normalizedImportance,
+      ];
+
+      normalizedItems[item.id] = normalizedValues;
+    }
+
+// Calculate percentiles
+    List<List<double>> normalizedValuesList = normalizedItems.values.toList();
+
+// Sort by deadline
+    normalizedValuesList.sort((a, b) => a[0].compareTo(b[0]));
+    double urgencyP25 =
+        normalizedValuesList[(normalizedValuesList.length * 0.25).floor()][0];
+    double urgencyP75 =
+        normalizedValuesList[(normalizedValuesList.length * 0.75).floor()][0];
+
+// Sort by estimated length
+    normalizedValuesList.sort((a, b) => a[1].compareTo(b[1]));
+    double estimatedLengthP25 =
+        normalizedValuesList[(normalizedValuesList.length * 0.25).floor()][1];
+    double estimatedLengthP75 =
+        normalizedValuesList[(normalizedValuesList.length * 0.75).floor()][1];
+
+// Sort by importance
+    normalizedValuesList.sort((a, b) => a[2].compareTo(b[2]));
+    double importanceP25 =
+        normalizedValuesList[(normalizedValuesList.length * 0.25).floor()][2];
+    double importanceP75 =
+        normalizedValuesList[(normalizedValuesList.length * 0.75).floor()][2];
+
+// Define shadow centroids
+    List<List<double>> centroids = [
+      [urgencyP25, estimatedLengthP25, importanceP75], // Urgent & Important
+      [urgencyP75, estimatedLengthP25, importanceP75], // Not Urgent & Important
+      [urgencyP25, estimatedLengthP25, importanceP25], // Urgent & Not Important
+      [
+        urgencyP75,
+        estimatedLengthP25,
+        importanceP25
+      ], // Not Urgent & Not Important
+    ];
+
+    print("Centroids");
+    print(centroids);
+
+// Classify items into quadrants
+    List<String> itemIds = normalizedItems.keys.toList();
+    for (String itemId in itemIds) {
+      List<double> itemCoordinates = normalizedItems[itemId]!;
+      double minDistance = double.infinity;
+      int minIndex = 0;
+
+      for (int i = 0; i < centroids.length; i++) {
+        double distance = _euclideanDistance(itemCoordinates, centroids[i]);
+        if (distance < minDistance) {
+          minDistance = distance;
+          minIndex = i;
+        }
+      }
+
+      // Assign the quadrant index (0-3) to the item
+      eisenhowerQuadrants[minIndex].add(itemId);
+    }
+
+    return eisenhowerQuadrants;
+  }
+
   Future<void> loadItemsFromDatabase() async {
     final items = await DatabaseHelper().getItems();
 
@@ -44,6 +202,119 @@ class ItemManager extends ChangeNotifier {
     // This call tells the widgets that are listening to this model to rebuild.
     notifyListeners();
   }
+
+  List<List<String>> sortItemsByEisenhowerMatrix({int maxIterations = 10}) {
+    // Define the number of clusters and maximum iterations
+    const int numClusters = 4;
+
+    // Initialize the clusters with random values
+    final List<List<Item>> clusters = [];
+    for (int i = 0; i < numClusters; i++) {
+      clusters.add([]);
+    }
+
+    // Define the distance function to calculate the distance between two items
+    double distance(Item item1, Item item2) {
+      double urgencyDiff = item1.urgency - item2.urgency;
+      double importanceDiff = item1.importance - item2.importance;
+      return sqrt(pow(urgencyDiff, 2) + pow(importanceDiff, 2));
+    }
+
+// Initialize the cluster centers with random data points
+    final List<Item> initialCenters = _items.values.toList()..shuffle();
+    for (int i = 0; i < numClusters; i++) {
+      clusters[i].add(initialCenters[i]);
+    }
+
+// Iterate until convergence or maximum iterations are reached
+    int iteration = 0;
+    bool converged = false;
+    while (!converged && iteration < maxIterations) {
+      iteration++;
+
+      // Assign each item to the closest cluster
+      for (final item in _items.values) {
+        double minDistance = double.infinity;
+        int closestClusterIndex = 0;
+        for (int i = 0; i < numClusters; i++) {
+          double clusterDistance = distance(item, clusters[i].first);
+          if (clusterDistance < minDistance) {
+            minDistance = clusterDistance;
+            closestClusterIndex = i;
+          }
+        }
+        clusters[closestClusterIndex].add(item);
+      }
+
+      // Update the urgency and importance values of each cluster based on the items
+      bool centersChanged = false;
+      for (int i = 0; i < numClusters; i++) {
+        double sumUrgency = 0;
+        double sumImportance = 0;
+        for (final item in clusters[i]) {
+          sumUrgency += item.urgency;
+          sumImportance += item.importance;
+        }
+        int clusterSize = clusters[i].length;
+        if (clusterSize > 0) {
+          double averageUrgency = sumUrgency / clusterSize;
+          double averageImportance = sumImportance / clusterSize;
+          if (clusters[i].first.urgency != averageUrgency ||
+              clusters[i].first.importance != averageImportance) {
+            centersChanged = true;
+          }
+          clusters[i].first.urgency = averageUrgency;
+          clusters[i].first.importance = averageImportance;
+        }
+      }
+
+      // Check convergence based on cluster center changes
+      if (!centersChanged) {
+        converged = true;
+      } else {
+        // Clear the clusters for the next iteration
+        for (int i = 0; i < numClusters; i++) {
+          clusters[i].clear();
+          clusters[i].add(initialCenters[i]);
+        }
+      }
+    }
+
+    // Create 4 lists of strings, each containing the IDs of the items in that quadrant
+    final List<String> quadrant1 = [];
+    final List<String> quadrant2 = [];
+    final List<String> quadrant3 = [];
+    final List<String> quadrant4 = [];
+
+    for (final item in _items.values) {
+      double minDistance = double.infinity;
+      int closestClusterIndex = 0;
+      for (int i = 0; i < numClusters; i++) {
+        double clusterDistance = distance(item, clusters[i].first);
+        if (clusterDistance < minDistance) {
+          minDistance = clusterDistance;
+          closestClusterIndex = i;
+        }
+      }
+      switch (closestClusterIndex) {
+        case 0:
+          quadrant1.add(item.id);
+          break;
+        case 1:
+          quadrant2.add(item.id);
+          break;
+        case 2:
+          quadrant3.add(item.id);
+          break;
+        case 3:
+          quadrant4.add(item.id);
+          break;
+      }
+    }
+
+    // Return the 4 lists of IDs
+    return [quadrant1, quadrant2, quadrant3, quadrant4];
+  }
 }
 
 enum ItemType { task, reminder }
@@ -64,6 +335,7 @@ class Item {
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'title': title,
       'description': description,
       'type': type.index,
