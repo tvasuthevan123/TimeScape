@@ -1,6 +1,6 @@
 import 'dart:collection';
 
-import 'package:timescape/item_manager.dart';
+import 'package:timescape/entry_manager.dart';
 
 class Assignment {
   DateTime time;

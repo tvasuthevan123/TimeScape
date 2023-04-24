@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:timescape/item_manager.dart';
+import 'package:timescape/entry_manager.dart';
 // import 'package:timescape/scheduler.dart';
 
 class DatabaseHelper {
@@ -14,7 +14,6 @@ class DatabaseHelper {
   Future<Database> get database async {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, dbName);
-    print(path);
     // Directory(path).delete(recursive: true);
     if ((await databaseExists(path)) == true) {
       _database = await openDatabase(path);
@@ -33,18 +32,35 @@ class DatabaseHelper {
       path,
       version: 1,
       onCreate: (db, version) async {
-        await db.execute('CREATE TABLE items ('
+        await db.execute('CREATE TABLE tasks ('
             'id STRING PRIMARY KEY, '
             'title TEXT, '
             'description TEXT, '
-            'type INTEGER, '
             'is_completed INTEGER, '
-            'is_soft_deadline INTEGER, '
             'deadline INTEGER, '
             'time_spent INTEGER, '
             'estimated_length INTEGER, '
             'urgency REAL, '
             'importance REAL'
+            ')');
+
+        await db.execute('CREATE TABLE events ('
+            'id STRING PRIMARY KEY, '
+            'title TEXT, '
+            'description TEXT, '
+            'date INTEGER, '
+            'length INTEGER, '
+            'reminderTimeBeforeEvent INTEGER, '
+            'recurrenceType STRING, '
+            'daysOfWeek STRING, '
+            'interval INTEGER, '
+            ')');
+
+        await db.execute('CREATE TABLE reminder ('
+            'id STRING PRIMARY KEY, '
+            'title TEXT, '
+            'description TEXT, '
+            'dateTime INTEGER, '
             ')');
 
         await db.execute('CREATE TABLE assignments ('
@@ -57,10 +73,22 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> addTask(Task item) async {
+  Future<int> addTask(Task task) async {
     final db = await database;
 
-    return db.insert('items', item.toMap());
+    return db.insert('tasks', task.toMap());
+  }
+
+  Future<int> addEvent(Event event) async {
+    final db = await database;
+
+    return db.insert('events', event.toMap());
+  }
+
+  Future<int> addReminder(Reminder reminder) async {
+    final db = await database;
+
+    return db.insert('reminder', reminder.toMap());
   }
 
   Future<List<Task>> getTasks() async {

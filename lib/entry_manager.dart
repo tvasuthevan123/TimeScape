@@ -66,15 +66,6 @@ class EntryManager extends ChangeNotifier {
     return sqrt(sum);
   }
 
-//   List<List<String>> classifyEntrysIntoQuadrants() {
-//     List<Entry> taskList = _items.values.toList();
-//     List<List<String>> eisenhowerQuadrants = [
-//       [], // Urgent & Important
-//       [], // Not Urgent & Important
-//       [], // Urgent & Not Important
-//       [], // Not Urgent & Not Important
-//     ];
-
 //     // Normalize features
 //     DateTime maxDeadline = taskList.fold(
 //         taskList[0].deadline,
@@ -146,48 +137,6 @@ class EntryManager extends ChangeNotifier {
 //         importanceP25
 //       ], // Not Urgent & Not Important
 //     ];
-
-//     print("Centroids");
-//     print(centroids);
-
-// // Classify items into quadrants
-//     List<String> itemIds = normalizedEntrys.keys.toList();
-//     for (String itemId in itemIds) {
-//       List<double> itemCoordinates = normalizedEntrys[itemId]!;
-//       double minDistance = double.infinity;
-//       int minIndex = 0;
-
-//       for (int i = 0; i < centroids.length; i++) {
-//         double distance = _euclideanDistance(itemCoordinates, centroids[i]);
-//         if (distance < minDistance) {
-//           minDistance = distance;
-//           minIndex = i;
-//         }
-//       }
-
-//       String quadrant = "Urgent, Important";
-//       switch (minIndex) {
-//         case 1:
-//           quadrant = "Not Urgent, Important";
-//           break;
-//         case 2:
-//           quadrant = "Urgent, Not Important";
-//           break;
-//         case 3:
-//           quadrant = "Not Urgent, Not Important";
-//           break;
-//         default:
-//           break;
-//       }
-
-//       print(
-//           "${items[itemId]?.importance},${items[itemId]?.estimatedLength.inMinutes}min, ${items[itemId]?.deadline.difference(DateTime.now()).inDays}days, $quadrant");
-//       // Assign the quadrant index (0-3) to the item
-//       eisenhowerQuadrants[minIndex].add(itemId);
-//     }
-
-//     return eisenhowerQuadrants;
-//   }
 
   List<List<String>> classifyTasksIntoQuadrants() {
     List<Task> taskList = _entries.values.whereType<Task>().toList();
@@ -296,7 +245,7 @@ class EntryManager extends ChangeNotifier {
     return eisenhowerQuadrants;
   }
 
-  Future<void> loadEntrysFromDatabase() async {
+  Future<void> loadEntriesFromDatabase() async {
     final tasks = await DatabaseHelper().getTasks();
 
     for (final tasks in tasks) {
@@ -434,8 +383,6 @@ class Task extends Entry {
   void calculateUrgency() {
     if (isCompleted) return;
 
-    print("Deadline: ${deadline}");
-    print("Minutes to deadline: ${calculateMinutes(DateTime.now(), deadline)}");
     weightedUrgency();
   }
 
@@ -455,19 +402,37 @@ class Task extends Entry {
 }
 
 class Reminder extends Entry {
-  DateTime time;
+  DateTime dateTime;
 
   Reminder({
     String? id,
     required String title,
     required String description,
-    required this.time,
+    required this.dateTime,
   }) : super(
           id: id,
           title: title,
           description: description,
           type: EntryType.reminder,
         );
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'dateTime': dateTime.millisecondsSinceEpoch,
+    };
+  }
+
+  static Reminder fromMap(Map<String, dynamic> map) {
+    return Reminder(
+      id: map['id'],
+      title: map['title'],
+      description: map['description'],
+      dateTime: DateTime.fromMillisecondsSinceEpoch(map['dateTime']),
+    );
+  }
 }
 
 class Event extends Entry {
@@ -490,14 +455,43 @@ class Event extends Entry {
           description: description,
           type: EntryType.event,
         );
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'startTime': startTime.millisecondsSinceEpoch,
+      'length': length.inMinutes,
+      'reminderTimeBeforeEvent': reminderTimeBeforeEvent.inMinutes,
+      'recurrenceType': recurrence.type.toString().split('.').last,
+      'daysOfWeek': recurrence.daysOfWeek.join(','),
+      'interval': recurrence.interval,
+    };
+  }
+
+  static Event fromMap(Map<String, dynamic> map) {
+    return Event(
+      id: map['id'],
+      title: map['title'],
+      description: map['description'],
+      startTime: DateTime.fromMillisecondsSinceEpoch(map['startTime']),
+      length: Duration(minutes: map['length']),
+      reminderTimeBeforeEvent:
+          Duration(minutes: map['reminderTimeBeforeEvent']),
+      recurrence: Recurrence(
+        type: RecurrenceType.values.firstWhere(
+          (type) => type.toString().split('.').last == map['recurrenceType'],
+        ),
+        daysOfWeek:
+            (map['daysOfWeek'] as String).split(',').map(int.parse).toList(),
+        interval: map['interval'],
+      ),
+    );
+  }
 }
 
-enum RecurrenceType {
-  daily,
-  weekly,
-  monthly,
-  yearly,
-}
+enum RecurrenceType { daily, weekly, monthly, custom }
 
 class Recurrence {
   RecurrenceType type;

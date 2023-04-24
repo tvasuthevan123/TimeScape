@@ -5,9 +5,13 @@ class DateTimePicker extends StatefulWidget {
   const DateTimePicker({
     Key? key,
     required this.onDateTimeChanged,
+    this.showDate = true,
+    this.showTime = true,
   }) : super(key: key);
 
   final Function(DateTime) onDateTimeChanged;
+  final bool showDate;
+  final bool showTime;
 
   @override
   State<DateTimePicker> createState() => _DateTimePickerState();
@@ -64,9 +68,9 @@ class _DateTimePickerState extends State<DateTimePicker> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
+    List<Widget> children = [];
+    if (widget.showDate) {
+      children.add(
         InkWell(
           onTap: () {
             _selectDate(context);
@@ -84,7 +88,11 @@ class _DateTimePickerState extends State<DateTimePicker> {
             ),
           ),
         ),
-        const SizedBox(width: 8),
+      );
+      children.add(const SizedBox(width: 8));
+    }
+    if (widget.showTime) {
+      children.add(
         InkWell(
           onTap: () {
             _selectTime(context);
@@ -102,7 +110,12 @@ class _DateTimePickerState extends State<DateTimePicker> {
             ),
           ),
         ),
-      ],
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: children,
     );
   }
 }

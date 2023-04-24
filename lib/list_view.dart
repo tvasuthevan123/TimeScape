@@ -3,11 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:timescape/database_helper.dart';
 import 'package:timescape/date_picker.dart';
 import 'package:timescape/duration_picker.dart';
+import 'package:timescape/entry_form.dart';
 import 'package:timescape/task_tile.dart';
 import 'package:timescape/toggle_selection.dart';
 import 'dart:math';
 
-import 'item_manager.dart';
+import 'entry_manager.dart';
 
 class EntryListView extends StatelessWidget {
   final EntryType entryType;
@@ -33,7 +34,6 @@ class EntryListView extends StatelessWidget {
               itemCount: items.length,
               itemBuilder: (context, index) {
                 final item = items[index];
-                print("Keys: ${itemKeys[index]}");
                 return TaskTile(
                   key: Key(itemKeys[index]),
                   item: item,
@@ -53,6 +53,7 @@ class EntryListView extends StatelessWidget {
                   String itemDescription = '';
                   DateTime deadline = DateTime.now();
                   Duration duration = const Duration(hours: 0, minutes: 15);
+                  EntryType entryType = EntryType.task;
                   showModalBottomSheet(
                     context: context,
                     builder: (BuildContext context) {
@@ -64,93 +65,7 @@ class EntryListView extends StatelessWidget {
                       return SingleChildScrollView(
                         child: Padding(
                           padding: EdgeInsets.only(bottom: bottomPadding),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: TextField(
-                                  decoration: InputDecoration(
-                                    hintText: 'Enter task name',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide:
-                                          const BorderSide(color: Colors.blue),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                  onChanged: (value) {
-                                    itemTitle = value;
-                                  },
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: TextField(
-                                  decoration: InputDecoration(
-                                    hintText: 'Enter task description',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide:
-                                          const BorderSide(color: Colors.blue),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                  onChanged: (value) {
-                                    itemDescription = value;
-                                  },
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ToggleButtonSelection(
-                                  onPressCallback: (selected) {
-                                    _selected = selected;
-                                  },
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: DateTimePicker(
-                                  onDateTimeChanged: (DateTime newDate) {
-                                    deadline = newDate;
-                                  },
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: DurationPicker(
-                                  initialDuration: duration,
-                                  onDurationChanged: (Duration newDuration) {
-                                    duration = newDuration;
-                                  },
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ElevatedButton(
-                                  onPressed: () async {
-                                    Task item = Task(
-                                      title: itemTitle,
-                                      description: itemDescription,
-                                      deadline: deadline,
-                                      estimatedLength: duration,
-                                    );
-                                    Provider.of<EntryManager>(context,
-                                            listen: false)
-                                        .addEntry(item);
-                                    Navigator.pop(context);
-                                    await DatabaseHelper().addTask(item);
-                                  },
-                                  child: const Text('Submit'),
-                                ),
-                              ),
-                            ],
-                          ),
+                          child: EntryForm(),
                         ),
                       );
                     },

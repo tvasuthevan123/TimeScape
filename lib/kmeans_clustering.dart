@@ -1,4 +1,4 @@
-import 'package:timescape/item_manager.dart';
+import 'package:timescape/entry_manager.dart';
 import 'dart:math';
 
 class KMeansClustering {

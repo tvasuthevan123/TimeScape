@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:timescape/database_helper.dart';
 import 'package:timescape/eisenhower_display.dart';
-import 'package:timescape/item_manager.dart';
+import 'package:timescape/entry_manager.dart';
 import 'package:timescape/list_view.dart';
 import 'package:timescape/scheduler.dart';
 import './sliding_app_bar.dart';
@@ -26,7 +26,7 @@ void main() async {
 
   // Create an instance of the EntryManager and load items from the database.
   final itemManager = EntryManager();
-  await itemManager.loadTasksFromDatabase();
+  await itemManager.loadEntriesFromDatabase();
   runApp(MyApp(itemManager: itemManager));
 }
 
@@ -116,7 +116,9 @@ class _MyHomePageState extends State<MyHomePage>
                             padding: EdgeInsets.only(
                               top: _isShowing ? 40 + buttonHeight : 40,
                             ),
-                            child: const TaskListView(type: TaskType.task),
+                            child: const EntryListView(
+                              entryType: EntryType.task,
+                            ),
                           ),
                         ),
                         Center(
@@ -125,7 +127,9 @@ class _MyHomePageState extends State<MyHomePage>
                             padding: EdgeInsets.only(
                               top: _isShowing ? 40 + buttonHeight : 40,
                             ),
-                            child: const TaskListView(type: TaskType.reminder),
+                            child: const EntryListView(
+                              entryType: EntryType.reminder,
+                            ),
                           ),
                         ),
                         Center(

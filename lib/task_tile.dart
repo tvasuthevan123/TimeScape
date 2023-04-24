@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timescape/database_helper.dart';
-import 'package:timescape/item_manager.dart';
+import 'package:timescape/entry_manager.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 

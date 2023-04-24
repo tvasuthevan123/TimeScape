@@ -1,38 +1,56 @@
 import 'package:flutter/material.dart';
 
-//TODO Multi selection
-
 class ToggleButtonSelection extends StatefulWidget {
-  final void Function(int) onPressCallback;
-  const ToggleButtonSelection(
-      {super.key, this.onPressCallback = _defaultOnPressCallback});
+  final void Function(List<int>)? onPressCallback;
+  final List<String> buttonLabels;
+  final bool allowMultipleSelection;
 
-  static void _defaultOnPressCallback(int selected) {
-    print('Selected: $selected');
-  }
+  const ToggleButtonSelection({
+    Key? key,
+    required this.buttonLabels,
+    this.onPressCallback,
+    this.allowMultipleSelection = false,
+  }) : super(key: key);
 
   @override
   State<ToggleButtonSelection> createState() => _ToggleButtonSelectionState();
 }
 
 class _ToggleButtonSelectionState extends State<ToggleButtonSelection> {
-  int _selectedButtonIndex = 0;
+  late List<bool> _isSelectedList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _isSelectedList =
+        List.generate(widget.buttonLabels.length, (index) => index == 0);
+  }
 
   void _onPressed(int index) {
     setState(() {
-      _selectedButtonIndex = index;
+      if (!widget.allowMultipleSelection) {
+        _isSelectedList =
+            List.generate(widget.buttonLabels.length, (i) => i == index);
+      } else {
+        _isSelectedList[index] = !_isSelectedList[index];
+      }
     });
-    widget.onPressCallback(index);
+
+    if (widget.onPressCallback != null) {
+      final selectedIndices = <int>[];
+      for (var i = 0; i < _isSelectedList.length; i++) {
+        if (_isSelectedList[i]) {
+          selectedIndices.add(i);
+        }
+      }
+      widget.onPressCallback!(selectedIndices);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return ToggleButtons(
-      isSelected: [
-        _selectedButtonIndex == 0,
-        _selectedButtonIndex == 1,
-        _selectedButtonIndex == 2
-      ],
+      isSelected: _isSelectedList,
       selectedColor: Colors.white,
       color: Colors.blue,
       fillColor: Colors.lightBlue.shade900,
@@ -45,11 +63,7 @@ class _ToggleButtonSelectionState extends State<ToggleButtonSelection> {
       borderRadius: BorderRadius.circular(10),
       selectedBorderColor: Colors.pink,
       onPressed: _onPressed,
-      children: const [
-        Text('Task'),
-        Text('Reminder'),
-        Text('Event'),
-      ],
+      children: widget.buttonLabels.map((label) => Text(label)).toList(),
     );
   }
 }
