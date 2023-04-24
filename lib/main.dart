@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:timescape/category_setup.dart';
 import 'package:timescape/database_helper.dart';
 import 'package:timescape/eisenhower_display.dart';
 import 'package:timescape/entry_manager.dart';
@@ -27,57 +28,71 @@ void main() async {
   // Create an instance of the EntryManager and load items from the database.
   final itemManager = EntryManager();
   await itemManager.loadEntriesFromDatabase();
-  runApp(MyApp(itemManager: itemManager));
+  runApp(TimeScape(itemManager: itemManager));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key, required this.itemManager}) : super(key: key);
+class TimeScape extends StatefulWidget {
+  TimeScape({Key? key, required this.itemManager}) : super(key: key);
 
   final EntryManager itemManager;
+  final _primaryColor = const Color.fromRGBO(0, 39, 41, 1);
+  @override
+  State<TimeScape> createState() => _TimeScapeState();
+}
 
-  final primaryColor = const Color.fromRGBO(0, 39, 41, 1);
+class _TimeScapeState extends State<TimeScape> {
+  bool _isCategoriesSet = false;
+
+  void setupCallback() {
+    setState(() => _isCategoriesSet = true);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.itemManager.categories.isNotEmpty) {
+      setState(() => _isCategoriesSet = true);
+    }
     return ChangeNotifierProvider<EntryManager>.value(
-      value: itemManager,
+      value: widget.itemManager,
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
         theme: ThemeData(
           textTheme: GoogleFonts.lexendDecaTextTheme(),
           primarySwatch: MaterialColor(
-            primaryColor.value,
+            widget._primaryColor.value,
             <int, Color>{
-              50: primaryColor.withOpacity(0.1),
-              100: primaryColor.withOpacity(0.2),
-              200: primaryColor.withOpacity(0.3),
-              300: primaryColor.withOpacity(0.4),
-              400: primaryColor.withOpacity(0.5),
-              500: primaryColor.withOpacity(0.6),
-              600: primaryColor.withOpacity(0.7),
-              700: primaryColor.withOpacity(0.8),
-              800: primaryColor.withOpacity(0.9),
-              900: primaryColor.withOpacity(1.0),
+              50: widget._primaryColor.withOpacity(0.1),
+              100: widget._primaryColor.withOpacity(0.2),
+              200: widget._primaryColor.withOpacity(0.3),
+              300: widget._primaryColor.withOpacity(0.4),
+              400: widget._primaryColor.withOpacity(0.5),
+              500: widget._primaryColor.withOpacity(0.6),
+              600: widget._primaryColor.withOpacity(0.7),
+              700: widget._primaryColor.withOpacity(0.8),
+              800: widget._primaryColor.withOpacity(0.9),
+              900: widget._primaryColor.withOpacity(1.0),
             },
           ),
           primaryColor: const Color.fromARGB(255, 235, 254, 255),
           platform: TargetPlatform.android,
         ),
-        home: const MyHomePage(),
+        home: _isCategoriesSet
+            ? const MainApp()
+            : SetupCategoriesPage(setupCallback),
       ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+class MainApp extends StatefulWidget {
+  const MainApp({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MainApp> createState() => _MainAppState();
 }
 
-class _MyHomePageState extends State<MyHomePage>
-    with SingleTickerProviderStateMixin {
+class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
   bool _isShowing = false;
   late final AnimationController _controller;
 
@@ -96,7 +111,7 @@ class _MyHomePageState extends State<MyHomePage>
     double maxHeight = MediaQuery.of(context).size.height;
     return DefaultTabController(
       initialIndex: 1,
-      length: 4,
+      length: 5,
       child: SafeArea(
         child: Material(
           child: Stack(
@@ -129,6 +144,17 @@ class _MyHomePageState extends State<MyHomePage>
                             ),
                             child: const EntryListView(
                               entryType: EntryType.reminder,
+                            ),
+                          ),
+                        ),
+                        Center(
+                          child: AnimatedPadding(
+                            duration: const Duration(milliseconds: 400),
+                            padding: EdgeInsets.only(
+                              top: _isShowing ? 40 + buttonHeight : 40,
+                            ),
+                            child: const EntryListView(
+                              entryType: EntryType.event,
                             ),
                           ),
                         ),

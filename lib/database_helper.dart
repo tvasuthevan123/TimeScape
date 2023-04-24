@@ -1,9 +1,11 @@
 import 'dart:io';
-
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:timescape/scheduler.dart';
 import 'package:timescape/entry_manager.dart';
+import 'package:timescape/category_setup.dart';
 // import 'package:timescape/scheduler.dart';
 
 class DatabaseHelper {
@@ -14,12 +16,15 @@ class DatabaseHelper {
   Future<Database> get database async {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, dbName);
+    // print("Database $path");
     // Directory(path).delete(recursive: true);
     if ((await databaseExists(path)) == true) {
+      print("I'm here");
       _database = await openDatabase(path);
       return _database!;
     }
 
+    print("I'm here too");
     _database = await _initDatabase();
     return _database!;
   }
@@ -27,6 +32,7 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, dbName);
+    print("Init Database $path");
 
     return openDatabase(
       path,
@@ -48,19 +54,20 @@ class DatabaseHelper {
             'id STRING PRIMARY KEY, '
             'title TEXT, '
             'description TEXT, '
-            'date INTEGER, '
+            'startTime  INTEGER, '
+            'startDate INTEGER, '
             'length INTEGER, '
             'reminderTimeBeforeEvent INTEGER, '
             'recurrenceType STRING, '
             'daysOfWeek STRING, '
-            'interval INTEGER, '
+            'interval INTEGER '
             ')');
 
-        await db.execute('CREATE TABLE reminder ('
+        await db.execute('CREATE TABLE reminders ('
             'id STRING PRIMARY KEY, '
             'title TEXT, '
             'description TEXT, '
-            'dateTime INTEGER, '
+            'dateTime INTEGER '
             ')');
 
         await db.execute('CREATE TABLE assignments ('
@@ -68,6 +75,12 @@ class DatabaseHelper {
             'timestamp INTEGER, '
             'duration INTEGER, '
             'FOREIGN KEY(id) REFERENCES items(id)'
+            ')');
+
+        await db.execute('CREATE TABLE categories ('
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'name STRING, '
+            'value INTEGER '
             ')');
       },
     );
@@ -88,12 +101,18 @@ class DatabaseHelper {
   Future<int> addReminder(Reminder reminder) async {
     final db = await database;
 
-    return db.insert('reminder', reminder.toMap());
+    return db.insert('reminders', reminder.toMap());
+  }
+
+  Future<int> addCategory(TaskCategory category) async {
+    final db = await database;
+
+    return db.insert('categories', category.toMap());
   }
 
   Future<List<Task>> getTasks() async {
     final db = await database;
-    final maps = await db.query('items');
+    final maps = await db.query('tasks');
 
     return List.generate(maps.length, (i) {
       return Task.fromMap(maps[i]);
@@ -104,20 +123,67 @@ class DatabaseHelper {
     final db = await database;
 
     return db
-        .update('items', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
+        .update('tasks', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
   }
 
   Future<int> deleteTask(Task item) async {
     final db = await database;
 
-    return db.delete('items', where: 'id = ?', whereArgs: [item.id]);
+    return db.delete('tasks', where: 'id = ?', whereArgs: [item.id]);
   }
 
-  // Future<int> addAssignment(Assignment assignment) async {
-  //   final db = await database;
+  Future<List<Reminder>> getReminders() async {
+    final db = await database;
+    final maps = await db.query('reminders');
 
-  //   return db.insert('assignments', assignment.toMap());
-  // }
+    return List.generate(maps.length, (i) {
+      return Reminder.fromMap(maps[i]);
+    });
+  }
+
+  Future<int> updateReminder(Reminder item) async {
+    final db = await database;
+
+    return db.update('reminders', item.toMap(),
+        where: 'id = ?', whereArgs: [item.id]);
+  }
+
+  Future<int> deleteReminder(Reminder item) async {
+    final db = await database;
+
+    return db.delete('reminders', where: 'id = ?', whereArgs: [item.id]);
+  }
+
+  Future<List<Event>> getEvents() async {
+    final db = await database;
+    final maps = await db.query('events');
+
+    return List.generate(maps.length, (i) {
+      return Event.fromMap(maps[i]);
+    });
+  }
+
+  Future<int> updateEvent(Event item) async {
+    final db = await database;
+
+    return db
+        .update('events', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
+  }
+
+  Future<int> deleteEvent(Event item) async {
+    final db = await database;
+
+    return db.delete('events', where: 'id = ?', whereArgs: [item.id]);
+  }
+
+  Future<List<TaskCategory>> getCategories() async {
+    final db = await database;
+    final maps = await db.query('categories');
+
+    return List.generate(maps.length, (i) {
+      return TaskCategory.fromMap(maps[i]);
+    });
+  }
 
   // Future<List<Assignment>> getAssignments() async {
   //   final db = await database;
@@ -126,5 +192,18 @@ class DatabaseHelper {
   //   return List.generate(maps.length, (i) {
   //     return Assignment.fromMap(maps[i]);
   //   });
+  // }
+
+  // Future<int> updateAssignment(Assignment item) async {
+  //   final db = await database;
+
+  //   return db.update('assignments', item.toMap(),
+  //       where: 'id = ?', whereArgs: [item.id]);
+  // }
+
+  // Future<int> deleteAssignment(Assignment item) async {
+  //   final db = await database;
+
+  //   return db.delete('assignments', where: 'id = ?', whereArgs: [item.id]);
   // }
 }

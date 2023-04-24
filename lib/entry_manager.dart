@@ -11,14 +11,15 @@ const timeLeeway = Duration(days: 3);
 class EntryManager extends ChangeNotifier {
   /// Internal, private state of the cart.
   final Map<String, Entry> _entries = {};
+  final List<TaskCategory> categories = [];
   UnmodifiableMapView<String, Entry> get entries =>
       UnmodifiableMapView<String, Entry>(_entries);
 
   EntryManager({Key? key}) {
-    _generateEntrys(1);
-    _generateEntrys(2);
-    _generateEntrys(5);
-    _generateEntrys(8);
+    // _generateEntrys(1);
+    // _generateEntrys(2);
+    // _generateEntrys(5);
+    // _generateEntrys(8);
   }
 
   void _generateEntrys(int importance) {
@@ -248,8 +249,26 @@ class EntryManager extends ChangeNotifier {
   Future<void> loadEntriesFromDatabase() async {
     final tasks = await DatabaseHelper().getTasks();
 
-    for (final tasks in tasks) {
-      _entries[tasks.id] = tasks;
+    for (final task in tasks) {
+      _entries[task.id] = task;
+    }
+
+    final reminders = await DatabaseHelper().getReminders();
+
+    for (final reminder in reminders) {
+      _entries[reminder.id] = reminder;
+    }
+
+    final events = await DatabaseHelper().getEvents();
+
+    for (final event in events) {
+      _entries[event.id] = event;
+    }
+
+    final categories = await DatabaseHelper().getCategories();
+
+    for (final category in categories) {
+      this.categories.add(category);
     }
 
     notifyListeners();
@@ -297,6 +316,8 @@ abstract class Entry {
   }) {
     if (id == '' || id == null) {
       this.id = const Uuid().v4();
+    } else {
+      this.id = id;
     }
   }
 }
@@ -337,7 +358,6 @@ class Task extends Entry {
       'title': title,
       'description': description,
       'is_completed': isCompleted ? 1 : 0,
-      'is_soft_deadline': isSoftDeadline ? 1 : 0,
       'deadline': deadline.millisecondsSinceEpoch,
       'time_spent': timeSpent.inMilliseconds,
       'estimated_length': estimatedLength.inMilliseconds,
@@ -351,7 +371,6 @@ class Task extends Entry {
       title: map['title'],
       description: map['description'],
       isCompleted: map['is_completed'] == 1,
-      isSoftDeadline: map['is_soft_deadline'] == 1,
       deadline: DateTime.fromMillisecondsSinceEpoch(map['deadline']),
       timeSpent: Duration(milliseconds: map['time_spent']),
       estimatedLength: Duration(milliseconds: map['estimated_length']),
@@ -436,7 +455,8 @@ class Reminder extends Entry {
 }
 
 class Event extends Entry {
-  DateTime startTime;
+  DateTime startDate; // date without time
+  TimeOfDay startTime; // time without date
   Duration length;
   Recurrence recurrence;
   Duration reminderTimeBeforeEvent;
@@ -445,6 +465,7 @@ class Event extends Entry {
     String? id,
     required String title,
     required String description,
+    required this.startDate,
     required this.startTime,
     required this.length,
     required this.recurrence,
@@ -461,7 +482,9 @@ class Event extends Entry {
       'id': id,
       'title': title,
       'description': description,
-      'startTime': startTime.millisecondsSinceEpoch,
+      'startDate': startDate.millisecondsSinceEpoch,
+      'startTime': DateTime(1, 1, 1, startTime.hour, startTime.minute)
+          .millisecondsSinceEpoch,
       'length': length.inMinutes,
       'reminderTimeBeforeEvent': reminderTimeBeforeEvent.inMinutes,
       'recurrenceType': recurrence.type.toString().split('.').last,
@@ -471,11 +494,18 @@ class Event extends Entry {
   }
 
   static Event fromMap(Map<String, dynamic> map) {
+    List<String> daysOfWeekList = map['daysOfWeek'].split(',');
+    if (daysOfWeekList.isNotEmpty) daysOfWeekList.removeLast();
+    List<int> daysOfWeekIntList =
+        daysOfWeekList.map((day) => int.parse(day)).toList();
+
     return Event(
       id: map['id'],
       title: map['title'],
       description: map['description'],
-      startTime: DateTime.fromMillisecondsSinceEpoch(map['startTime']),
+      startTime: TimeOfDay(
+          hour: map['startTime'] ~/ 60, minute: map['startTime'] % 60),
+      startDate: DateTime.fromMicrosecondsSinceEpoch(map['startDate']),
       length: Duration(minutes: map['length']),
       reminderTimeBeforeEvent:
           Duration(minutes: map['reminderTimeBeforeEvent']),
@@ -483,8 +513,7 @@ class Event extends Entry {
         type: RecurrenceType.values.firstWhere(
           (type) => type.toString().split('.').last == map['recurrenceType'],
         ),
-        daysOfWeek:
-            (map['daysOfWeek'] as String).split(',').map(int.parse).toList(),
+        daysOfWeek: daysOfWeekIntList,
         interval: map['interval'],
       ),
     );
@@ -503,4 +532,28 @@ class Recurrence {
     required this.daysOfWeek,
     required this.interval,
   });
+}
+
+class TaskCategory {
+  final String name;
+  final int value;
+
+  TaskCategory({
+    required this.name,
+    required this.value,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'value': value,
+    };
+  }
+
+  factory TaskCategory.fromMap(Map<String, dynamic> map) {
+    return TaskCategory(
+      name: map['name'],
+      value: map['value'],
+    );
+  }
 }

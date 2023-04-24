@@ -16,6 +16,7 @@ class _EntryFormState extends State<EntryForm> {
   String _entryTitle = '';
   String _entryDescription = '';
   DateTime _dateTime = DateTime.now();
+
   Duration _length = const Duration(hours: 0, minutes: 15);
 
   Duration _reminderTimeBeforeEvent = const Duration(hours: 0, minutes: 15);
@@ -106,7 +107,9 @@ class _EntryFormState extends State<EntryForm> {
                   title: _entryTitle,
                   description: _entryDescription,
                   length: _length,
-                  startTime: _dateTime,
+                  startTime:
+                      TimeOfDay(hour: _dateTime.hour, minute: _dateTime.minute),
+                  startDate: _dateTime,
                   reminderTimeBeforeEvent: _reminderTimeBeforeEvent,
                   recurrence: Recurrence(
                     type: _recurrenceType,
