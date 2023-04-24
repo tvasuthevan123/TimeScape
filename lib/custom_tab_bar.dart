@@ -5,6 +5,7 @@ class CustomTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ThemeData theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.only(
@@ -14,7 +15,9 @@ class CustomTabBar extends StatelessWidget {
         border: Border.all(width: 2),
       ),
       child: TabBar(
-        indicatorColor: Colors.transparent,
+        indicatorSize: TabBarIndicatorSize.label,
+        labelColor: theme.primaryColorLight, // Selected icon color
+        // unselectedLabelColor: theme.primaryColor,
         tabs: <Widget>[
           Tab(
             child: SizedBox(
@@ -39,7 +42,6 @@ class CustomTabBar extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10.0),
                   border: Border.all(
-                    color: const Color.fromRGBO(0, 39, 41, 1),
                     width: 2.0,
                   ),
                 ),
@@ -55,7 +57,6 @@ class CustomTabBar extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10.0),
                   border: Border.all(
-                    color: const Color.fromRGBO(0, 39, 41, 1),
                     width: 2.0,
                   ),
                 ),
@@ -71,7 +72,6 @@ class CustomTabBar extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10.0),
                   border: Border.all(
-                    color: const Color.fromRGBO(0, 39, 41, 1),
                     width: 2.0,
                   ),
                 ),
@@ -87,7 +87,6 @@ class CustomTabBar extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10.0),
                   border: Border.all(
-                    color: const Color.fromRGBO(0, 39, 41, 1),
                     width: 2.0,
                   ),
                 ),

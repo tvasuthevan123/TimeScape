@@ -36,6 +36,7 @@ class TimeScape extends StatefulWidget {
 
   final EntryManager itemManager;
   final _primaryColor = const Color.fromRGBO(0, 39, 41, 1);
+  final _secondaryColor = const Color.fromARGB(255, 11, 136, 143);
   @override
   State<TimeScape> createState() => _TimeScapeState();
 }
@@ -62,16 +63,26 @@ class _TimeScapeState extends State<TimeScape> {
           primarySwatch: MaterialColor(
             widget._primaryColor.value,
             <int, Color>{
-              50: widget._primaryColor.withOpacity(0.1),
-              100: widget._primaryColor.withOpacity(0.2),
-              200: widget._primaryColor.withOpacity(0.3),
-              300: widget._primaryColor.withOpacity(0.4),
-              400: widget._primaryColor.withOpacity(0.5),
-              500: widget._primaryColor.withOpacity(0.6),
-              600: widget._primaryColor.withOpacity(0.7),
-              700: widget._primaryColor.withOpacity(0.8),
-              800: widget._primaryColor.withOpacity(0.9),
-              900: widget._primaryColor.withOpacity(1.0),
+              50: Color.lerp(
+                  widget._primaryColor, widget._secondaryColor, 0.1)!,
+              100: Color.lerp(
+                  widget._primaryColor, widget._secondaryColor, 0.2)!,
+              200: Color.lerp(
+                  widget._primaryColor, widget._secondaryColor, 0.3)!,
+              300: Color.lerp(
+                  widget._primaryColor, widget._secondaryColor, 0.4)!,
+              400: Color.lerp(
+                  widget._primaryColor, widget._secondaryColor, 0.5)!,
+              500: Color.lerp(
+                  widget._primaryColor, widget._secondaryColor, 0.6)!,
+              600: Color.lerp(
+                  widget._primaryColor, widget._secondaryColor, 0.7)!,
+              700: Color.lerp(
+                  widget._primaryColor, widget._secondaryColor, 0.8)!,
+              800: Color.lerp(
+                  widget._primaryColor, widget._secondaryColor, 0.9)!,
+              900: Color.lerp(
+                  widget._primaryColor, widget._secondaryColor, 1.0)!,
             },
           ),
           primaryColor: const Color.fromARGB(255, 235, 254, 255),

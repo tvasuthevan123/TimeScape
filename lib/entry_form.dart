@@ -8,7 +8,7 @@ import 'package:timescape/duration_picker.dart';
 
 class EntryForm extends StatefulWidget {
   @override
-  _EntryFormState createState() => _EntryFormState();
+  State<EntryForm> createState() => _EntryFormState();
 }
 
 class _EntryFormState extends State<EntryForm> {
@@ -21,127 +21,132 @@ class _EntryFormState extends State<EntryForm> {
 
   Duration _reminderTimeBeforeEvent = const Duration(hours: 0, minutes: 15);
   RecurrenceType _recurrenceType = RecurrenceType.daily;
-  String _chosenDay = '';
   List<int> _chosenDays = [];
   int _dayOfMonth = 0;
   int _interval = 0;
 
+  int importance = 0;
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: 'Enter task name',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+    return Consumer<EntryManager>(builder: (context, itemManager, child) {
+      importance = itemManager.categories[0].value;
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Enter task name',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(color: Colors.blue),
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Colors.blue),
-                borderRadius: BorderRadius.circular(10),
-              ),
+              onChanged: (value) {
+                setState(() {
+                  _entryTitle = value;
+                });
+              },
             ),
-            onChanged: (value) {
-              setState(() {
-                _entryTitle = value;
-              });
-            },
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: 'Enter task description',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Enter task description',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(color: Colors.blue),
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Colors.blue),
-                borderRadius: BorderRadius.circular(10),
-              ),
+              onChanged: (value) {
+                setState(() {
+                  _entryDescription = value;
+                });
+              },
             ),
-            onChanged: (value) {
-              setState(() {
-                _entryDescription = value;
-              });
-            },
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: ToggleButtonSelection(
-            buttonLabels: ['Task', 'Reminder', 'Event'],
-            onPressCallback: (selected) {
-              setState(() {
-                _entryType = EntryType.values[selected[0]];
-              });
-            },
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ToggleButtonSelection(
+              buttonLabels: ['Task', 'Reminder', 'Event'],
+              onPressCallback: (selected) {
+                setState(() {
+                  _entryType = EntryType.values[selected[0]];
+                });
+              },
+            ),
           ),
-        ),
+          // Conditionally render form elements based on _entryType
+          if (_entryType == EntryType.task) _taskForm(itemManager),
+          if (_entryType == EntryType.event) _eventForm(),
+          if (_entryType == EntryType.reminder) _reminderForm(),
+          // Submit button
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              onPressed: () async {
+                // Handle form submission based on _entryType
+                Entry entry;
+                if (_entryType == EntryType.task) {
+                  entry = Task(
+                    title: _entryTitle,
+                    description: _entryDescription,
+                    deadline: _dateTime,
+                    estimatedLength: _length,
+                    importance: importance.toDouble(),
+                  );
+                  await DatabaseHelper().addTask(entry as Task);
+                } else if (_entryType == EntryType.event) {
+                  entry = Event(
+                    title: _entryTitle,
+                    description: _entryDescription,
+                    length: _length,
+                    startTime: TimeOfDay(
+                        hour: _dateTime.hour, minute: _dateTime.minute),
+                    startDate: _dateTime,
+                    reminderTimeBeforeEvent: _reminderTimeBeforeEvent,
+                    recurrence: Recurrence(
+                      type: _recurrenceType,
+                      daysOfWeek: _chosenDays,
+                      interval: _interval,
+                    ),
+                  );
+                  await DatabaseHelper().addEvent(entry as Event);
+                } else if (_entryType == EntryType.reminder) {
+                  entry = Reminder(
+                    title: _entryTitle,
+                    description: _entryDescription,
+                    dateTime: _dateTime,
+                  );
+                  await DatabaseHelper().addReminder(entry as Reminder);
+                } else {
+                  // Handle case where _entryType is not equal to any of the defined values
+                  // For example, you might throw an error or provide a default value for entry
+                  throw Exception('Invalid entry type: $_entryType');
+                }
 
-        // Conditionally render form elements based on _entryType
-        if (_entryType == EntryType.task) _taskForm(),
-        if (_entryType == EntryType.event) _eventForm(),
-        if (_entryType == EntryType.reminder) _reminderForm(),
-        // Submit button
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: ElevatedButton(
-            onPressed: () async {
-              // Handle form submission based on _entryType
-              Entry entry;
-              if (_entryType == EntryType.task) {
-                entry = Task(
-                  title: _entryTitle,
-                  description: _entryDescription,
-                  deadline: _dateTime,
-                  estimatedLength: _length,
-                );
-                await DatabaseHelper().addTask(entry as Task);
-              } else if (_entryType == EntryType.event) {
-                entry = Event(
-                  title: _entryTitle,
-                  description: _entryDescription,
-                  length: _length,
-                  startTime:
-                      TimeOfDay(hour: _dateTime.hour, minute: _dateTime.minute),
-                  startDate: _dateTime,
-                  reminderTimeBeforeEvent: _reminderTimeBeforeEvent,
-                  recurrence: Recurrence(
-                    type: _recurrenceType,
-                    daysOfWeek: _chosenDays,
-                    interval: _interval,
-                  ),
-                );
-                await DatabaseHelper().addEvent(entry as Event);
-              } else if (_entryType == EntryType.reminder) {
-                entry = Reminder(
-                  title: _entryTitle,
-                  description: _entryDescription,
-                  dateTime: _dateTime,
-                );
-                await DatabaseHelper().addReminder(entry as Reminder);
-              } else {
-                // Handle case where _entryType is not equal to any of the defined values
-                // For example, you might throw an error or provide a default value for entry
-                throw Exception('Invalid entry type: $_entryType');
-              }
-
-              Provider.of<EntryManager>(context, listen: false).addEntry(entry);
-              Navigator.pop(context);
-            },
-            child: const Text('Submit'),
-          ),
-        ),
-      ],
-    );
+                Provider.of<EntryManager>(context, listen: false)
+                    .addEntry(entry);
+                Navigator.pop(context);
+              },
+              child: const Text('Submit'),
+            ),
+          )
+        ],
+      );
+    });
   }
 
-  Widget _taskForm() {
+  Widget _taskForm(EntryManager itemManager) {
     return Column(
       children: [
         Padding(
@@ -163,6 +168,24 @@ class _EntryFormState extends State<EntryForm> {
                 _length = newDuration;
               });
             },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: DropdownButtonFormField<TaskCategory>(
+            onChanged: (TaskCategory? category) {
+              importance = category!.value;
+            },
+            items: itemManager.categories.map((TaskCategory category) {
+              return DropdownMenuItem<TaskCategory>(
+                value: category,
+                child: Text(category.name),
+              );
+            }).toList(),
+            decoration: const InputDecoration(
+              labelText: 'Category',
+              border: OutlineInputBorder(),
+            ),
           ),
         ),
       ],
@@ -336,10 +359,6 @@ class _EntryFormState extends State<EntryForm> {
           _renderDaysOfWeek(),
           SizedBox(height: 16),
           _renderDuration(),
-        ] else if (_recurrenceType == RecurrenceType.monthly) ...[
-          _renderDateTime(false, true),
-          SizedBox(height: 16),
-          _renderDayOfMonth(),
         ] else if (_recurrenceType == RecurrenceType.custom) ...[
           _renderDateTime(true, true),
           SizedBox(height: 16),

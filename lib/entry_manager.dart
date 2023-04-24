@@ -246,6 +246,16 @@ class EntryManager extends ChangeNotifier {
     return eisenhowerQuadrants;
   }
 
+  void addCategory(TaskCategory category) {
+    categories.add(category);
+    notifyListeners();
+  }
+
+  void removeCategory(int id) {
+    categories.removeWhere((element) => element.id == id);
+    notifyListeners();
+  }
+
   Future<void> loadEntriesFromDatabase() async {
     final tasks = await DatabaseHelper().getTasks();
 
@@ -520,7 +530,7 @@ class Event extends Entry {
   }
 }
 
-enum RecurrenceType { daily, weekly, monthly, custom }
+enum RecurrenceType { daily, weekly, custom }
 
 class Recurrence {
   RecurrenceType type;
@@ -537,6 +547,7 @@ class Recurrence {
 class TaskCategory {
   final String name;
   final int value;
+  int id = 0;
 
   TaskCategory({
     required this.name,
@@ -550,7 +561,7 @@ class TaskCategory {
     };
   }
 
-  factory TaskCategory.fromMap(Map<String, dynamic> map) {
+  static TaskCategory fromMap(Map<String, dynamic> map) {
     return TaskCategory(
       name: map['name'],
       value: map['value'],

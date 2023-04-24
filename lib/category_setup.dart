@@ -16,60 +16,88 @@ class _SetupCategoriesPageState extends State<SetupCategoriesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Setup Categories'),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: _categories.length,
-              itemBuilder: (context, index) {
-                return Dismissible(
-                  key: Key(_categories[index].name),
-                  onDismissed: (direction) {
-                    setState(() {
-                      _categories.removeAt(index);
-                    });
-                  },
-                  child: ListTile(
-                    title: Text(_categories[index].name),
-                    subtitle: Text('Importance: ${_categories[index].value}'),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete),
-                      onPressed: () {
-                        setState(() {
-                          _categories.removeAt(index);
-                        });
-                      },
+    final screenWidth = MediaQuery.of(context).size.width;
+    return SafeArea(
+      child: Material(
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.zero,
+              child: Center(
+                child: Container(
+                  width: screenWidth * 0.8,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10.0),
+                    border: Border.all(
+                      color: const Color.fromRGBO(0, 39, 41, 1),
+                      width: 2.0,
                     ),
+                    color: const Color.fromRGBO(0, 78, 82, 1),
                   ),
-                );
-              },
+                  padding: const EdgeInsets.all(16),
+                  child: const Text(
+                    "Setup Categories",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                _addTaskCategory(context);
-              },
-              child: Text('Add TaskCategory'),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: _categories.length < 2
-                  ? null
-                  : () {
-                      _saveCategories();
+            Expanded(
+              child: ListView.builder(
+                itemCount: _categories.length,
+                itemBuilder: (context, index) {
+                  return Dismissible(
+                    key: Key(_categories[index].name),
+                    onDismissed: (direction) {
+                      setState(() async {
+                        await DatabaseHelper()
+                            .deleteCategory(_categories[index]);
+                        _categories.removeAt(index);
+                      });
                     },
-              child: Text('Save and Continue'),
+                    child: ListTile(
+                      title: Text(_categories[index].name),
+                      subtitle: Text('Importance: ${_categories[index].value}'),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () {
+                          setState(() {
+                            _categories.removeAt(index);
+                          });
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  _addTaskCategory(context);
+                },
+                child: Text('Add TaskCategory'),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: _categories.length < 2
+                    ? null
+                    : () {
+                        _saveCategories();
+                      },
+                child: Text('Save and Continue'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -77,21 +105,21 @@ class _SetupCategoriesPageState extends State<SetupCategoriesPage> {
   void _addTaskCategory(BuildContext context) async {
     final nameController = TextEditingController();
     final valueController = TextEditingController();
-    bool hasError = true;
+    bool isNotValidParams = true;
 
     await showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
-            title: Text('Add TaskCategory'),
+            title: Text('Add Category'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
-                    labelText: 'TaskCategory Name',
+                    labelText: 'Category Name',
                     hintText: 'Enter category name',
                   ),
                 ),
@@ -99,23 +127,22 @@ class _SetupCategoriesPageState extends State<SetupCategoriesPage> {
                   controller: valueController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: 'TaskCategory Value',
-                    hintText: 'Enter category value',
+                    labelText: 'Category Value',
+                    hintText: 'Enter importance value (higher = more priority)',
                   ),
                   onChanged: (value) {
                     setState(() {
                       if (value.isNotEmpty) {
                         int? parsedValue = int.tryParse(value);
-                        hasError = parsedValue == null;
-                        if (!hasError) {}
+                        isNotValidParams = parsedValue == null;
                       } else {
-                        hasError = true;
+                        isNotValidParams = true;
                       }
                     });
                   },
                 ),
                 Visibility(
-                  visible: hasError,
+                  visible: isNotValidParams,
                   child: Text(
                     'Please enter a valid number for category value',
                     style: TextStyle(color: Colors.red),
@@ -131,18 +158,20 @@ class _SetupCategoriesPageState extends State<SetupCategoriesPage> {
                 child: Text('Cancel'),
               ),
               ElevatedButton(
-                onPressed: hasError
-                    ? null
-                    : () {
-                        setState(() {
-                          _categories.add(
-                            TaskCategory(
-                              name: nameController.text,
-                              value: int.parse(valueController.text),
-                            ),
-                          );
-                        });
+                onPressed: isNotValidParams
+                    ? () {}
+                    : () async {
+                        TaskCategory category = TaskCategory(
+                          name: nameController.text,
+                          value: int.parse(valueController.text),
+                        );
+                        _categories.add(category);
+                        category.id =
+                            await DatabaseHelper().addCategory(category);
+                        // Close the dialog
                         Navigator.of(context).pop();
+                        // Refresh the state of the SetupCategoriesPage
+                        setState(() {});
                       },
                 child: Text('Submit'),
               ),
@@ -151,6 +180,13 @@ class _SetupCategoriesPageState extends State<SetupCategoriesPage> {
         });
       },
     );
+
+    // Update the state of the parent widget after closing the dialog
+    setState(() {});
+  }
+
+  void updateMainState() {
+    setState(() {});
   }
 
   void _saveCategories() async {
@@ -161,10 +197,6 @@ class _SetupCategoriesPageState extends State<SetupCategoriesPage> {
         ),
       );
       return;
-    }
-
-    for (TaskCategory category in _categories) {
-      await DatabaseHelper().addCategory(category);
     }
 
     // Call the setupCompleteCallback to notify the parent widget that the setup is complete

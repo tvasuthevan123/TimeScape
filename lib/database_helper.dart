@@ -19,12 +19,10 @@ class DatabaseHelper {
     // print("Database $path");
     // Directory(path).delete(recursive: true);
     if ((await databaseExists(path)) == true) {
-      print("I'm here");
       _database = await openDatabase(path);
       return _database!;
     }
 
-    print("I'm here too");
     _database = await _initDatabase();
     return _database!;
   }
@@ -183,6 +181,12 @@ class DatabaseHelper {
     return List.generate(maps.length, (i) {
       return TaskCategory.fromMap(maps[i]);
     });
+  }
+
+  Future<int> deleteCategory(TaskCategory category) async {
+    final db = await database;
+
+    return db.delete('events', where: 'id = ?', whereArgs: [category.id]);
   }
 
   // Future<List<Assignment>> getAssignments() async {
