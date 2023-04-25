@@ -26,12 +26,15 @@ class _EntryFormState extends State<EntryForm> {
   int _dayOfMonth = 0;
   int _interval = 0;
 
-  int importance = 0;
+  int categoryID = 1;
+
+  final nameController = TextEditingController();
+  bool isNotValidParams = true;
 
   @override
   Widget build(BuildContext context) {
     return Consumer<EntryManager>(builder: (context, itemManager, child) {
-      importance = itemManager.categories[0].value;
+      categoryID = itemManager.categories[0].id;
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -100,7 +103,7 @@ class _EntryFormState extends State<EntryForm> {
                     description: _entryDescription,
                     deadline: _dateTime,
                     estimatedLength: _length,
-                    importance: importance.toDouble(),
+                    categoryID: categoryID,
                   );
                   await DatabaseHelper().addTask(entry as Task);
                 } else if (_entryType == EntryType.event) {
@@ -172,7 +175,8 @@ class _EntryFormState extends State<EntryForm> {
           child: DropdownButtonFormField<TaskCategory>(
             value: itemManager.categories[0],
             onChanged: (TaskCategory? category) {
-              importance = category!.value;
+              categoryID = category!.id;
+              print(categoryID);
             },
             items: itemManager.categories.map((TaskCategory category) {
               return DropdownMenuItem<TaskCategory>(
@@ -349,23 +353,15 @@ class _EntryFormState extends State<EntryForm> {
 
     return Column(
       children: [
-        ToggleButtonSelection(
-          buttonLabels: const [
-            'Daily',
-            'Weekly',
-            'Monthly',
-            'Custom Interval',
-          ],
-          onPressCallback: (index) {
-            setState(() {
-              _recurrenceType = RecurrenceType.values[index[0]];
-            });
-          },
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text("Time before Event Alert"),
         ),
-        Container(
+        Padding(
+          padding: const EdgeInsets.all(8),
           child: InputDecorator(
             decoration: InputDecoration(
-              hintText: 'Enter task description',
+              hintText: 'Reminder time before deadline',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -378,7 +374,24 @@ class _EntryFormState extends State<EntryForm> {
           ),
         ),
         const SizedBox(height: 16),
-        if (_recurrenceType == RecurrenceType.daily) ...[
+        ToggleButtonSelection(
+          buttonLabels: const [
+            'One Off'
+                'Daily',
+            'Weekly',
+            'Monthly',
+            'Custom Interval',
+          ],
+          onPressCallback: (index) {
+            setState(() {
+              _recurrenceType = RecurrenceType.values[index[0]];
+            });
+          },
+        ),
+        const SizedBox(height: 16),
+        if (_recurrenceType == RecurrenceType.oneOff) ...[
+          _renderDateTime(false, true),
+        ] else if (_recurrenceType == RecurrenceType.daily) ...[
           _renderDateTime(false, true),
         ] else if (_recurrenceType == RecurrenceType.weekly) ...[
           _renderDateTime(false, true),

@@ -25,6 +25,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return Consumer<EntryManager>(builder: (context, itemManager, child) {
       return SafeArea(
         child: Material(
+          color: const Color.fromARGB(255, 235, 254, 255),
           child: Column(
             children: [
               Padding(
@@ -53,7 +54,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 16,
               ),
               Row(
@@ -79,7 +80,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 10,
                   ),
                   InkWell(
@@ -104,7 +105,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ],
               ),
-              SizedBox(
+              const SizedBox(
                 height: 16,
               ),
               Padding(
@@ -151,7 +152,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         subtitle: Text(
                             'Importance: ${itemManager.categories[index].value}'),
                         trailing: IconButton(
-                          icon: Icon(Icons.delete),
+                          icon: const Icon(Icons.delete),
                           onPressed: () {
                             setState(() {
                               itemManager.categories.removeAt(index);
@@ -164,23 +165,23 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16.0),
                 child: ElevatedButton(
                   onPressed: () {
                     _addTaskCategory(context, itemManager);
                   },
-                  child: Text('Add TaskCategory'),
+                  child: const Text('Add TaskCategory'),
                 ),
               ),
               Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16.0),
                 child: ElevatedButton(
                   onPressed: itemManager.categories.length < 2
                       ? null
                       : () {
                           _saveCategories(itemManager);
                         },
-                  child: Text('Save and Continue'),
+                  child: const Text('Save and Continue'),
                 ),
               ),
             ],
@@ -200,13 +201,13 @@ class _SettingsPageState extends State<SettingsPage> {
       builder: (context) {
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
-            title: Text('Add Category'),
+            title: const Text('Add Category'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Category Name',
                     hintText: 'Enter category name',
                   ),
@@ -214,7 +215,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 TextField(
                   controller: valueController,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Category Value',
                     hintText: 'Enter importance value (higher = more priority)',
                   ),
@@ -231,7 +232,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 Visibility(
                   visible: isNotValidParams,
-                  child: Text(
+                  child: const Text(
                     'Please enter a valid number for category value',
                     style: TextStyle(color: Colors.red),
                   ),
@@ -243,7 +244,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: Text('Cancel'),
+                child: const Text('Cancel'),
               ),
               ElevatedButton(
                 onPressed: isNotValidParams
@@ -261,7 +262,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         // Refresh the state of the SetupCategoriesPage
                         setState(() {});
                       },
-                child: Text('Submit'),
+                child: const Text('Submit'),
               ),
             ],
           );

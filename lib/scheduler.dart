@@ -24,23 +24,37 @@ class TimeBlock {
       : assignments = List.empty(growable: true);
 }
 
-List<Assignment> scheduler(UnmodifiableMapView<String, Entry> items,
-    List<TimeBlock> timeBlocks, int breakTime) {
-  for (String itemID in items.keys.toList()) {
-    Task item = items[itemID]! as Task;
+List<Assignment> scheduler(EntryManager itemManager, List<TimeBlock> timeBlocks,
+    int breakTime, List<Event> events) {
+  List<String> prioritisedItemIDs = itemManager
+      .classifyTasksIntoQuadrants()
+      .fold([], (previousValue, element) => previousValue + element);
+
+  timeBlocks.forEach((element) {
+    print("Timeblock Time - ${element.time} - Duration - ${element.duration}");
+  });
+  for (String itemID in prioritisedItemIDs) {
+    Task item = itemManager.entries[itemID]! as Task;
     Duration unassignedDuration = item.estimatedLength;
     for (TimeBlock block in timeBlocks) {
-      int availability = timeAvailable(unassignedDuration, block);
+      Duration allocatedTime = block.assignments.fold(
+        Duration.zero,
+        (previousValue, element) =>
+            previousValue + element.duration + Duration(minutes: breakTime),
+      );
+
+      Duration unallocTime = block.duration - allocatedTime;
+      int availability = timeAvailable(unassignedDuration, unallocTime);
       if (availability == 0) {
         block.assignments.add(Assignment(
-          time: block.time.add(unassignedDuration),
+          time: block.time.add(allocatedTime),
           itemID: itemID,
           duration: unassignedDuration,
         ));
         unassignedDuration = Duration.zero;
       } else if (availability == 1) {
         block.assignments.add(Assignment(
-          time: block.time.add(unassignedDuration),
+          time: block.time.add(allocatedTime),
           itemID: itemID,
           duration: const Duration(minutes: 30),
         ));
@@ -60,20 +74,29 @@ List<Assignment> scheduler(UnmodifiableMapView<String, Entry> items,
     }
   }
 
-  return timeBlocks.fold<List<Assignment>>(
+  List<Assignment> assignments = timeBlocks.fold<List<Assignment>>(
     [],
     (acc, timeBlock) {
       return acc + timeBlock.assignments;
     },
   );
+  assignments += events
+      .map(
+        (e) => Assignment(
+            time: DateTime(1, 1, 1, e.startTime.hour, e.startTime.minute),
+            itemID: e.id,
+            duration: e.length),
+      )
+      .toList();
+
+  return assignments;
 }
 
-int timeAvailable(Duration unassignedDuration, TimeBlock block) {
-  Duration time = block.duration;
-  if (unassignedDuration <= time) {
+int timeAvailable(Duration unassignedDuration, Duration unallocatedTime) {
+  if (unassignedDuration <= unallocatedTime) {
     return 0;
   } else if (unassignedDuration >= const Duration(minutes: 30) &&
-      time >= const Duration(minutes: 30)) {
+      unallocatedTime >= const Duration(minutes: 30)) {
     return 1;
   } else {
     return -1;

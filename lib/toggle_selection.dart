@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 class ToggleButtonSelection extends StatefulWidget {
@@ -63,7 +65,12 @@ class _ToggleButtonSelectionState extends State<ToggleButtonSelection> {
       borderRadius: BorderRadius.circular(10),
       selectedBorderColor: Colors.pink,
       onPressed: _onPressed,
-      children: widget.buttonLabels.map((label) => Text(label)).toList(),
+      children: widget.buttonLabels
+          .map((label) => Padding(
+                padding: const EdgeInsets.all(1),
+                child: Text(label),
+              ))
+          .toList(),
     );
   }
 }

@@ -54,61 +54,57 @@ class EntryManager extends ChangeNotifier {
           isSoftDeadline: true,
           deadline: deadline,
           estimatedLength: Duration(minutes: estimatedLength),
-          importance: importance.toDouble(),
+          categoryID: 0,
         ));
       }
     }
   }
 
-  Future<List<TimeBlock>> getTimeBlocksForToday() async {
-    final eventsTodayIds = await DatabaseHelper().getEventsHappeningToday();
-    final eventsToday = entries.values
+  Future<List<Event>> getEventsToday() async {
+    List<String> eventsTodayIDs = await DatabaseHelper().getTodayEventIDs();
+    return entries.values
         .where(
-          (element) => eventsTodayIds.contains(element.id),
+          (element) => eventsTodayIDs.contains(element.id),
         )
         .toList()
         .cast<Event>();
+  }
 
+  Future<List<TimeBlock>> getFreeTimeBlocksToday(
+      List<Event> eventsToday) async {
     final List<TimeBlock> timeBlocks = [];
+
+    print("Start Work Time: ${startWorkTime}");
+    print("End Work Time: ${endWorkTime}");
+
     final startWorkTimeInMinutes =
         startWorkTime.hour * 60 + startWorkTime.minute;
     final endWorkTimeInMinutes = endWorkTime.hour * 60 + endWorkTime.minute;
 
+    int previousEventEndInMinutes = startWorkTimeInMinutes;
+
     for (var i = 0; i < eventsToday.length; i++) {
       final event = eventsToday[i];
+      print(
+          "Event - ${event.startTime} and duration ${event.length.inMinutes}");
       final eventStartInMinutes =
           event.startTime.hour * 60 + event.startTime.minute;
       final eventEndInMinutes = eventStartInMinutes + event.length.inMinutes;
 
-      if (i == 0 && eventStartInMinutes > startWorkTimeInMinutes) {
+      if (eventStartInMinutes > previousEventEndInMinutes) {
         timeBlocks.add(TimeBlock(
-          time: DateTime(event.startDate.year, event.startDate.month,
-              event.startDate.day, startWorkTime.hour, startWorkTime.minute),
-          duration:
-              Duration(minutes: eventStartInMinutes - startWorkTimeInMinutes),
+          time: DateTime(
+              event.startDate.year,
+              event.startDate.month,
+              event.startDate.day,
+              previousEventEndInMinutes ~/ 60,
+              previousEventEndInMinutes % 60),
+          duration: Duration(
+              minutes: eventStartInMinutes - previousEventEndInMinutes),
         ));
       }
 
-      if (i > 0) {
-        final prevEvent = eventsToday[i - 1];
-        final prevEventStartInMinutes =
-            prevEvent.startTime.hour * 60 + prevEvent.startTime.minute;
-        final prevEventEndInMinutes =
-            prevEventStartInMinutes + prevEvent.length.inMinutes;
-        if (eventStartInMinutes > prevEventEndInMinutes) {
-          timeBlocks.add(TimeBlock(
-            time: DateTime(
-              prevEvent.startDate.year,
-              prevEvent.startDate.month,
-              prevEvent.startDate.day,
-              prevEventEndInMinutes ~/ 60,
-              prevEventEndInMinutes % 60,
-            ),
-            duration:
-                Duration(minutes: eventStartInMinutes - prevEventEndInMinutes),
-          ));
-        }
-      }
+      previousEventEndInMinutes = eventEndInMinutes;
 
       if (i == eventsToday.length - 1 &&
           eventEndInMinutes < endWorkTimeInMinutes) {
@@ -122,6 +118,19 @@ class EntryManager extends ChangeNotifier {
           duration: Duration(minutes: endWorkTimeInMinutes - eventEndInMinutes),
         ));
       }
+    }
+
+    if (previousEventEndInMinutes < endWorkTimeInMinutes) {
+      timeBlocks.add(TimeBlock(
+        time: DateTime(
+            eventsToday.last.startDate.year,
+            eventsToday.last.startDate.month,
+            eventsToday.last.startDate.day,
+            previousEventEndInMinutes ~/ 60,
+            previousEventEndInMinutes % 60),
+        duration:
+            Duration(minutes: endWorkTimeInMinutes - previousEventEndInMinutes),
+      ));
     }
 
     return timeBlocks;
@@ -154,17 +163,27 @@ class EntryManager extends ChangeNotifier {
       [], // Not Urgent & Not Important
     ];
 
-    double maxImportance = taskList.fold(
-        taskList[0].importance,
-        (prev, current) =>
-            current.importance > prev ? current.importance : prev);
+    List<double> importanceVals = taskList
+        .map((e) => categories
+            .firstWhere((category) => e.categoryID == category.id)
+            .value
+            .toDouble())
+        .toList();
+
+    double maxImportance = importanceVals.fold(
+        0, (prev, current) => current > prev ? current : prev);
 
     Map<String, List<double>> itemFeatures = {};
     for (Task item in taskList) {
       double lengthToDeadlineRatio = item.estimatedLength.inMinutes /
           item.deadline.difference(DateTime.now()).inMinutes;
-      double normalizedImportance =
-          _minMaxNormalization(item.importance, 0, maxImportance);
+      double normalizedImportance = _minMaxNormalization(
+          categories
+              .firstWhere((category) => item.categoryID == category.id)
+              .value
+              .toDouble(),
+          0,
+          maxImportance);
 
       List<double> normalizedValues = [
         lengthToDeadlineRatio,
@@ -368,7 +387,9 @@ class Task extends Entry {
   Duration estimatedLength;
 
   double urgency = 0;
-  double importance = 0;
+  // double importance = 0;
+
+  int categoryID = 0;
 
   Task({
     String? id,
@@ -380,7 +401,7 @@ class Task extends Entry {
     this.isSoftDeadline = false,
     this.timeSpent = Duration.zero,
     this.urgency = 0,
-    this.importance = 0,
+    required this.categoryID,
   }) : super(
           id: id,
           title: title,
@@ -400,7 +421,7 @@ class Task extends Entry {
       'time_spent': timeSpent.inMilliseconds,
       'estimated_length': estimatedLength.inMilliseconds,
       'urgency': urgency,
-      'importance': importance,
+      'category': categoryID
     };
   }
 
@@ -413,7 +434,7 @@ class Task extends Entry {
       timeSpent: Duration(milliseconds: map['time_spent']),
       estimatedLength: Duration(milliseconds: map['estimated_length']),
       urgency: map['urgency'],
-      importance: map['importance'],
+      categoryID: map['category'],
       id: map['id'],
     );
   }
@@ -521,8 +542,7 @@ class Event extends Entry {
       'title': title,
       'description': description,
       'startDate': startDate.millisecondsSinceEpoch,
-      'startTime': DateTime(1, 1, 1, startTime.hour, startTime.minute)
-          .millisecondsSinceEpoch,
+      'startTime': "${startTime.hour}, ${startTime.minute}",
       'length': length.inMinutes,
       'reminderTimeBeforeEvent': reminderTimeBeforeEvent.inMinutes,
       'recurrenceType': recurrence.type.toString().split('.').last,
@@ -533,17 +553,22 @@ class Event extends Entry {
   }
 
   static Event fromMap(Map<String, dynamic> map) {
-    List<String> daysOfWeekList = map['daysOfWeek'].split(',');
+    List<String> daysOfWeekList = (map['daysOfWeek'] as String).split(',');
     if (daysOfWeekList.isNotEmpty) daysOfWeekList.removeLast();
     List<int> daysOfWeekIntList =
         daysOfWeekList.map((day) => int.parse(day)).toList();
+
+    print("Event Map $map");
+    List<int> startTimeParams = ((map['startTime'] as String).split(','))
+        .map((e) => int.parse(e))
+        .toList();
 
     return Event(
       id: map['id'],
       title: map['title'],
       description: map['description'],
-      startTime: TimeOfDay(
-          hour: map['startTime'] ~/ 60, minute: map['startTime'] % 60),
+      startTime:
+          TimeOfDay(hour: startTimeParams[0], minute: startTimeParams[1]),
       startDate: DateTime.fromMicrosecondsSinceEpoch(map['startDate']),
       length: Duration(minutes: map['length']),
       reminderTimeBeforeEvent:
@@ -560,7 +585,7 @@ class Event extends Entry {
   }
 }
 
-enum RecurrenceType { daily, weekly, custom }
+enum RecurrenceType { oneOff, daily, weekly, custom }
 
 class Recurrence {
   final RecurrenceType type;
@@ -584,6 +609,7 @@ class TaskCategory {
   TaskCategory({
     required this.name,
     required this.value,
+    this.id = 0,
   });
 
   Map<String, dynamic> toMap() {
@@ -597,6 +623,7 @@ class TaskCategory {
     return TaskCategory(
       name: map['name'],
       value: map['value'],
+      id: map['id'],
     );
   }
 }

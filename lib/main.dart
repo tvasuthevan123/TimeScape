@@ -191,7 +191,18 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
                             padding: EdgeInsets.only(
                               top: _isShowing ? 40 + buttonHeight : 40,
                             ),
-                            child: SettingsPage(() {}),
+                            child: Column(children: [
+                              Expanded(
+                                child: SettingsPage(() {}),
+                              ),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await DatabaseHelper().resetDB();
+                                  SystemNavigator.pop();
+                                },
+                                child: const Text('Reset App Data'),
+                              ),
+                            ]),
                           ),
                         ),
                       ],

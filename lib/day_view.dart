@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timescape/database_helper.dart';
 import 'package:timescape/entry_manager.dart';
 import 'package:timescape/scheduler.dart';
 
@@ -111,6 +112,9 @@ class _DayViewState extends State<DayView> {
                 (assignment.time.hour * 60 + assignment.time.minute) / 15 * 25 +
                     12.5;
 
+            Entry entry = itemManager.entries[assignment.itemID]!;
+            // print(
+            // "${entry.title} - Duration - ${assignment.duration} - Time - ${assignment.time}");
             double height = assignment.duration.inMinutes / 15 * 25;
             return Positioned(
                 top: _overlayPosition + top,
@@ -131,8 +135,8 @@ class _DayViewState extends State<DayView> {
                   child: Container(
                     color: Colors.lightBlue,
                     alignment: Alignment.topLeft,
-                    child: const Text(
-                      'Overlay',
+                    child: Text(
+                      entry.title,
                       textAlign: TextAlign.left,
                     ),
                   ),
@@ -147,10 +151,13 @@ class _DayViewState extends State<DayView> {
               ),
               backgroundColor: const Color.fromRGBO(0, 39, 41, 1),
               onPressed: () async {
-                List<TimeBlock> timeBlocks =
-                    await itemManager.getTimeBlocksForToday();
-                assignments =
-                    await scheduler(itemManager.entries, timeBlocks, 5);
+                List<Event> eventsToday = await itemManager.getEventsToday();
+                List<TimeBlock> freeTimeBlocks =
+                    await itemManager.getFreeTimeBlocksToday(eventsToday);
+                setState(() {
+                  assignments =
+                      scheduler(itemManager, freeTimeBlocks, 5, eventsToday);
+                });
               },
               child: const Icon(
                 Icons.add,

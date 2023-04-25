@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:timescape/scheduler.dart';
 import 'package:timescape/entry_manager.dart';
 import 'package:timescape/category_setup.dart';
+
 // import 'package:timescape/scheduler.dart';
 
 class DatabaseHelper {
@@ -14,11 +15,22 @@ class DatabaseHelper {
 
   static Database? _database;
 
-  Future<Database> get database async {
+  Future<void> resetDB() async {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, dbName);
     // print("Database $path");
-    // Directory(path).delete(recursive: true);
+    print("Deleting database");
+    try {
+      Directory(path).deleteSync(recursive: true);
+    } catch (e) {
+      print(e);
+    }
+    _database = await _initDatabase();
+  }
+
+  Future<Database> get database async {
+    final documentsDirectory = await getApplicationDocumentsDirectory();
+    final path = join(documentsDirectory.path, dbName);
     if ((await databaseExists(path)) == true) {
       _database = await openDatabase(path);
       return _database!;
@@ -46,14 +58,15 @@ class DatabaseHelper {
             'time_spent INTEGER, '
             'estimated_length INTEGER, '
             'urgency REAL, '
-            'importance REAL'
+            'category int, '
+            'FOREIGN KEY(category) REFERENCES category(id)'
             ')');
 
         await db.execute('CREATE TABLE events ('
             'id STRING PRIMARY KEY, '
             'title TEXT, '
             'description TEXT, '
-            'startTime  INTEGER, '
+            'startTime STRING, '
             'startDate INTEGER, '
             'length INTEGER, '
             'reminderTimeBeforeEvent INTEGER, '
@@ -181,6 +194,7 @@ class DatabaseHelper {
     final maps = await db.query('categories');
 
     return List.generate(maps.length, (i) {
+      print(maps[i]);
       return TaskCategory.fromMap(maps[i]);
     });
   }
@@ -191,7 +205,19 @@ class DatabaseHelper {
     return db.delete('events', where: 'id = ?', whereArgs: [category.id]);
   }
 
-  Future<List<String>> getEventsHappeningToday() async {
+  Future<int> deleteEntry(Entry entry) async {
+    EntryType type = entry.type;
+    switch (type) {
+      case EntryType.task:
+        return await DatabaseHelper().deleteTask((entry as Task));
+      case EntryType.reminder:
+        return await DatabaseHelper().deleteReminder((entry as Reminder));
+      case EntryType.event:
+        return await DatabaseHelper().deleteEvent((entry as Event));
+    }
+  }
+
+  Future<List<String>> getTodayEventIDs() async {
     final today = DateTime.now();
     final todayStart =
         DateTime(today.year, today.month, today.day).millisecondsSinceEpoch;
@@ -201,7 +227,16 @@ class DatabaseHelper {
     final results = await db.rawQuery('''
     SELECT id
     FROM events
-    WHERE startDate BETWEEN $todayStart AND $todayEnd
+    WHERE 
+      (startDate BETWEEN $todayStart AND $todayEnd)
+      OR 
+      (recurrenceType = "Daily" AND startDate <= $todayEnd)
+      OR 
+      (recurrenceType = "Weekly" AND daysOfWeek LIKE "%${today.weekday}%" AND startDate <= $todayEnd)
+      OR 
+      (recurrenceType = "Monthly" AND dayOfMonth = ${today.day} AND startDate <= $todayEnd)
+      OR 
+      (recurrenceType = "Custom Interval" AND startDate <= $todayEnd AND (julianday("now") - julianday(startDate)) % interval = 0)
   ''');
 
     return results.map((result) => result['id'] as String).toList();
