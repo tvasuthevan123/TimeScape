@@ -7,6 +7,7 @@ import 'package:timescape/date_picker.dart';
 import 'package:timescape/duration_picker.dart';
 
 class EntryForm extends StatefulWidget {
+  const EntryForm({Key? key}) : super(key: key);
   @override
   State<EntryForm> createState() => _EntryFormState();
 }
@@ -77,7 +78,7 @@ class _EntryFormState extends State<EntryForm> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ToggleButtonSelection(
-              buttonLabels: ['Task', 'Reminder', 'Event'],
+              buttonLabels: const ['Task', 'Reminder', 'Event'],
               onPressCallback: (selected) {
                 setState(() {
                   _entryType = EntryType.values[selected[0]];
@@ -85,16 +86,13 @@ class _EntryFormState extends State<EntryForm> {
               },
             ),
           ),
-          // Conditionally render form elements based on _entryType
           if (_entryType == EntryType.task) _taskForm(itemManager),
           if (_entryType == EntryType.event) _eventForm(),
           if (_entryType == EntryType.reminder) _reminderForm(),
-          // Submit button
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
               onPressed: () async {
-                // Handle form submission based on _entryType
                 Entry entry;
                 if (_entryType == EntryType.task) {
                   entry = Task(
@@ -117,6 +115,7 @@ class _EntryFormState extends State<EntryForm> {
                     recurrence: Recurrence(
                       type: _recurrenceType,
                       daysOfWeek: _chosenDays,
+                      dayOfMonth: _dayOfMonth,
                       interval: _interval,
                     ),
                   );
@@ -129,8 +128,6 @@ class _EntryFormState extends State<EntryForm> {
                   );
                   await DatabaseHelper().addReminder(entry as Reminder);
                 } else {
-                  // Handle case where _entryType is not equal to any of the defined values
-                  // For example, you might throw an error or provide a default value for entry
                   throw Exception('Invalid entry type: $_entryType');
                 }
 
@@ -173,6 +170,7 @@ class _EntryFormState extends State<EntryForm> {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: DropdownButtonFormField<TaskCategory>(
+            value: itemManager.categories[0],
             onChanged: (TaskCategory? category) {
               importance = category!.value;
             },
@@ -245,6 +243,21 @@ class _EntryFormState extends State<EntryForm> {
             onDurationChanged: (Duration newDuration) {
               setState(() {
                 _length = newDuration;
+              });
+            },
+          ),
+        ],
+      );
+    }
+
+    Widget _renderTimeBeforeAlert() {
+      return Column(
+        children: [
+          DurationPicker(
+            initialDuration: _length,
+            onDurationChanged: (Duration newDuration) {
+              setState(() {
+                _reminderTimeBeforeEvent = newDuration;
               });
             },
           ),
@@ -349,21 +362,36 @@ class _EntryFormState extends State<EntryForm> {
             });
           },
         ),
-        SizedBox(height: 16),
+        Container(
+          child: InputDecorator(
+            decoration: InputDecoration(
+              hintText: 'Enter task description',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Colors.blue),
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: _renderTimeBeforeAlert(),
+          ),
+        ),
+        const SizedBox(height: 16),
         if (_recurrenceType == RecurrenceType.daily) ...[
           _renderDateTime(false, true),
-          _renderDuration(),
         ] else if (_recurrenceType == RecurrenceType.weekly) ...[
           _renderDateTime(false, true),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           _renderDaysOfWeek(),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           _renderDuration(),
         ] else if (_recurrenceType == RecurrenceType.custom) ...[
           _renderDateTime(true, true),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           _renderCustomInterval(),
         ],
+        _renderDuration(),
       ],
     );
   }

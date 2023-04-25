@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -58,6 +59,7 @@ class DatabaseHelper {
             'reminderTimeBeforeEvent INTEGER, '
             'recurrenceType STRING, '
             'daysOfWeek STRING, '
+            'dayOfMonth INTEGER, '
             'interval INTEGER '
             ')');
 
@@ -187,6 +189,22 @@ class DatabaseHelper {
     final db = await database;
 
     return db.delete('events', where: 'id = ?', whereArgs: [category.id]);
+  }
+
+  Future<List<String>> getEventsHappeningToday() async {
+    final today = DateTime.now();
+    final todayStart =
+        DateTime(today.year, today.month, today.day).millisecondsSinceEpoch;
+    final todayEnd = todayStart + Duration(days: 1).inMilliseconds - 1;
+
+    final db = await database;
+    final results = await db.rawQuery('''
+    SELECT id
+    FROM events
+    WHERE startDate BETWEEN $todayStart AND $todayEnd
+  ''');
+
+    return results.map((result) => result['id'] as String).toList();
   }
 
   // Future<List<Assignment>> getAssignments() async {

@@ -3,13 +3,18 @@ import 'dart:math';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timescape/database_helper.dart';
+import 'package:timescape/scheduler.dart';
 import 'package:uuid/uuid.dart';
 
 const timeLeeway = Duration(days: 3);
 
 class EntryManager extends ChangeNotifier {
   /// Internal, private state of the cart.
+
+  TimeOfDay startWorkTime = const TimeOfDay(hour: 9, minute: 0);
+  TimeOfDay endWorkTime = const TimeOfDay(hour: 17, minute: 0);
   final Map<String, Entry> _entries = {};
   final List<TaskCategory> categories = [];
   UnmodifiableMapView<String, Entry> get entries =>
@@ -55,6 +60,73 @@ class EntryManager extends ChangeNotifier {
     }
   }
 
+  Future<List<TimeBlock>> getTimeBlocksForToday() async {
+    final eventsTodayIds = await DatabaseHelper().getEventsHappeningToday();
+    final eventsToday = entries.values
+        .where(
+          (element) => eventsTodayIds.contains(element.id),
+        )
+        .toList()
+        .cast<Event>();
+
+    final List<TimeBlock> timeBlocks = [];
+    final startWorkTimeInMinutes =
+        startWorkTime.hour * 60 + startWorkTime.minute;
+    final endWorkTimeInMinutes = endWorkTime.hour * 60 + endWorkTime.minute;
+
+    for (var i = 0; i < eventsToday.length; i++) {
+      final event = eventsToday[i];
+      final eventStartInMinutes =
+          event.startTime.hour * 60 + event.startTime.minute;
+      final eventEndInMinutes = eventStartInMinutes + event.length.inMinutes;
+
+      if (i == 0 && eventStartInMinutes > startWorkTimeInMinutes) {
+        timeBlocks.add(TimeBlock(
+          time: DateTime(event.startDate.year, event.startDate.month,
+              event.startDate.day, startWorkTime.hour, startWorkTime.minute),
+          duration:
+              Duration(minutes: eventStartInMinutes - startWorkTimeInMinutes),
+        ));
+      }
+
+      if (i > 0) {
+        final prevEvent = eventsToday[i - 1];
+        final prevEventStartInMinutes =
+            prevEvent.startTime.hour * 60 + prevEvent.startTime.minute;
+        final prevEventEndInMinutes =
+            prevEventStartInMinutes + prevEvent.length.inMinutes;
+        if (eventStartInMinutes > prevEventEndInMinutes) {
+          timeBlocks.add(TimeBlock(
+            time: DateTime(
+              prevEvent.startDate.year,
+              prevEvent.startDate.month,
+              prevEvent.startDate.day,
+              prevEventEndInMinutes ~/ 60,
+              prevEventEndInMinutes % 60,
+            ),
+            duration:
+                Duration(minutes: eventStartInMinutes - prevEventEndInMinutes),
+          ));
+        }
+      }
+
+      if (i == eventsToday.length - 1 &&
+          eventEndInMinutes < endWorkTimeInMinutes) {
+        timeBlocks.add(TimeBlock(
+          time: DateTime(
+              event.startDate.year,
+              event.startDate.month,
+              event.startDate.day,
+              eventEndInMinutes ~/ 60,
+              eventEndInMinutes % 60),
+          duration: Duration(minutes: endWorkTimeInMinutes - eventEndInMinutes),
+        ));
+      }
+    }
+
+    return timeBlocks;
+  }
+
   double _minMaxNormalization(double value, double min, double max) {
     return (value - min) / (max - min);
   }
@@ -66,78 +138,6 @@ class EntryManager extends ChangeNotifier {
     }
     return sqrt(sum);
   }
-
-//     // Normalize features
-//     DateTime maxDeadline = taskList.fold(
-//         taskList[0].deadline,
-//         (prev, current) =>
-//             current.deadline.isAfter(prev) ? current.deadline : prev);
-//     Duration maxEstimatedLength = taskList.fold(
-//         taskList[0].estimatedLength,
-//         (prev, current) =>
-//             current.estimatedLength > prev ? current.estimatedLength : prev);
-//     double maxImportance = taskList.fold(
-//         taskList[0].importance,
-//         (prev, current) =>
-//             current.importance > prev ? current.importance : prev);
-
-//     Map<String, List<double>> normalizedEntrys = Map();
-//     for (Entry item in taskList) {
-//       double normalizedDeadline = _minMaxNormalization(
-//           maxDeadline.difference(item.deadline).inMilliseconds.toDouble(),
-//           0,
-//           maxDeadline.difference(DateTime.now()).inMilliseconds.toDouble());
-//       double normalizedEstimatedLength = _minMaxNormalization(
-//           item.estimatedLength.inMilliseconds.toDouble(),
-//           0,
-//           maxEstimatedLength.inMilliseconds.toDouble());
-//       double normalizedImportance =
-//           _minMaxNormalization(item.importance, 0, maxImportance);
-
-//       List<double> normalizedValues = [
-//         normalizedDeadline,
-//         normalizedEstimatedLength,
-//         normalizedImportance,
-//       ];
-
-//       normalizedEntrys[item.id] = normalizedValues;
-//     }
-
-// // Calculate percentiles
-//     List<List<double>> normalizedValuesList = normalizedEntrys.values.toList();
-
-// // Sort by deadline
-//     normalizedValuesList.sort((a, b) => a[0].compareTo(b[0]));
-//     double urgencyP25 =
-//         normalizedValuesList[(normalizedValuesList.length * 0.25).floor()][0];
-//     double urgencyP75 =
-//         normalizedValuesList[(normalizedValuesList.length * 0.75).floor()][0];
-
-// // Sort by estimated length
-//     normalizedValuesList.sort((a, b) => a[1].compareTo(b[1]));
-//     double estimatedLengthP25 =
-//         normalizedValuesList[(normalizedValuesList.length * 0.25).floor()][1];
-//     double estimatedLengthP75 =
-//         normalizedValuesList[(normalizedValuesList.length * 0.75).floor()][1];
-
-// // Sort by importance
-//     normalizedValuesList.sort((a, b) => a[2].compareTo(b[2]));
-//     double importanceP25 =
-//         normalizedValuesList[(normalizedValuesList.length * 0.25).floor()][2];
-//     double importanceP75 =
-//         normalizedValuesList[(normalizedValuesList.length * 0.75).floor()][2];
-
-// // Define shadow centroids
-//     List<List<double>> centroids = [
-//       [urgencyP75, estimatedLengthP75, importanceP75], // Urgent & Important
-//       [urgencyP25, estimatedLengthP25, importanceP75], // Not Urgent & Important
-//       [urgencyP75, estimatedLengthP75, importanceP25], // Urgent & Not Important
-//       [
-//         urgencyP25,
-//         estimatedLengthP25,
-//         importanceP25
-//       ], // Not Urgent & Not Important
-//     ];
 
   List<List<String>> classifyTasksIntoQuadrants() {
     List<Task> taskList = _entries.values.whereType<Task>().toList();
@@ -256,7 +256,35 @@ class EntryManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadEntriesFromDatabase() async {
+  Future<void> setStartWorkTime(int startMinutes) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('startWorkMinutes', startMinutes);
+    startWorkTime =
+        TimeOfDay(hour: startMinutes ~/ 60, minute: startMinutes % 60);
+    notifyListeners();
+  }
+
+  Future<void> setEndWorkTime(int endMinutes) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('endWorkMinutes', endMinutes);
+    endWorkTime = TimeOfDay(hour: endMinutes ~/ 60, minute: endMinutes % 60);
+    notifyListeners();
+  }
+
+  Future<void> loadPersistentDate() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int startWorkMinutes = prefs.getInt('startWorkMinutes') ?? -1;
+    if (startWorkMinutes != -1) {
+      startWorkTime = TimeOfDay(
+          hour: startWorkMinutes ~/ 60, minute: startWorkMinutes % 60);
+    }
+
+    int endWorkMinutes = prefs.getInt('endWorkMinutes') ?? -1;
+    if (endWorkMinutes != -1) {
+      endWorkTime =
+          TimeOfDay(hour: endWorkMinutes ~/ 60, minute: endWorkMinutes % 60);
+    }
+
     final tasks = await DatabaseHelper().getTasks();
 
     for (final task in tasks) {
@@ -499,6 +527,7 @@ class Event extends Entry {
       'reminderTimeBeforeEvent': reminderTimeBeforeEvent.inMinutes,
       'recurrenceType': recurrence.type.toString().split('.').last,
       'daysOfWeek': recurrence.daysOfWeek.join(','),
+      'dayOfMonth': recurrence.dayOfMonth,
       'interval': recurrence.interval,
     };
   }
@@ -524,6 +553,7 @@ class Event extends Entry {
           (type) => type.toString().split('.').last == map['recurrenceType'],
         ),
         daysOfWeek: daysOfWeekIntList,
+        dayOfMonth: map['dayOfMonth'],
         interval: map['interval'],
       ),
     );
@@ -533,13 +563,15 @@ class Event extends Entry {
 enum RecurrenceType { daily, weekly, custom }
 
 class Recurrence {
-  RecurrenceType type;
-  List<int> daysOfWeek;
-  int interval;
+  final RecurrenceType type;
+  final List<int> daysOfWeek;
+  final int dayOfMonth;
+  final int interval;
 
   Recurrence({
     required this.type,
     required this.daysOfWeek,
+    this.dayOfMonth = 0,
     required this.interval,
   });
 }

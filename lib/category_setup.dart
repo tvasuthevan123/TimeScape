@@ -1,108 +1,196 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timescape/database_helper.dart';
+import 'package:timescape/date_picker.dart';
 import 'package:timescape/entry_manager.dart';
 
-class SetupCategoriesPage extends StatefulWidget {
+class SettingsPage extends StatefulWidget {
   final VoidCallback setupCompleteCallback;
 
-  const SetupCategoriesPage(this.setupCompleteCallback);
+  const SettingsPage(this.setupCompleteCallback);
 
   @override
-  State<SetupCategoriesPage> createState() => _SetupCategoriesPageState();
+  State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SetupCategoriesPageState extends State<SetupCategoriesPage> {
-  List<TaskCategory> _categories = [];
+class _SettingsPageState extends State<SettingsPage> {
+  DateTime selectedTimeStart = DateTime(1, 1, 1, 9, 0);
+  DateTime selectedTimeEnd = DateTime(1, 1, 1, 17, 0);
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    return SafeArea(
-      child: Material(
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.zero,
-              child: Center(
-                child: Container(
-                  width: screenWidth * 0.8,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10.0),
-                    border: Border.all(
-                      color: const Color.fromRGBO(0, 39, 41, 1),
-                      width: 2.0,
+    return Consumer<EntryManager>(builder: (context, itemManager, child) {
+      return SafeArea(
+        child: Material(
+          child: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.zero,
+                child: Center(
+                  child: Container(
+                    width: screenWidth * 0.8,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10.0),
+                      border: Border.all(
+                        color: const Color.fromRGBO(0, 39, 41, 1),
+                        width: 2.0,
+                      ),
+                      color: const Color.fromRGBO(0, 78, 82, 1),
                     ),
-                    color: const Color.fromRGBO(0, 78, 82, 1),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: const Text(
-                    "Setup Categories",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                      color: Colors.white,
+                    padding: const EdgeInsets.all(16),
+                    child: const Text(
+                      "Setup Work Hours",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _categories.length,
-                itemBuilder: (context, index) {
-                  return Dismissible(
-                    key: Key(_categories[index].name),
-                    onDismissed: (direction) {
-                      setState(() async {
-                        await DatabaseHelper()
-                            .deleteCategory(_categories[index]);
-                        _categories.removeAt(index);
+              SizedBox(
+                height: 16,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  InkWell(
+                    onTap: () {
+                      _selectTimeStart(context, (DateTime selectedTime) async {
+                        await itemManager.setStartWorkTime(
+                            selectedTime.hour * 60 + selectedTime.minute);
                       });
                     },
-                    child: ListTile(
-                      title: Text(_categories[index].name),
-                      subtitle: Text('Importance: ${_categories[index].value}'),
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () {
-                          setState(() {
-                            _categories.removeAt(index);
-                          });
-                        },
+                    child: SizedBox(
+                      width: 150,
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Work Day Start',
+                          border: OutlineInputBorder(),
+                        ),
+                        child: Text(
+                          DateFormat('HH:mm').format(selectedTimeStart),
+                        ),
                       ),
                     ),
-                  );
-                },
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  InkWell(
+                    onTap: () {
+                      _selectTimeEnd(context, (DateTime selectedTime) async {
+                        await itemManager.setEndWorkTime(
+                            selectedTime.hour * 60 + selectedTime.minute);
+                      });
+                    },
+                    child: SizedBox(
+                      width: 150,
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Work Day Start',
+                          border: OutlineInputBorder(),
+                        ),
+                        child: Text(
+                          DateFormat('HH:mm').format(selectedTimeEnd),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  _addTaskCategory(context);
-                },
-                child: Text('Add TaskCategory'),
+              SizedBox(
+                height: 16,
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: _categories.length < 2
-                    ? null
-                    : () {
-                        _saveCategories();
+              Padding(
+                padding: EdgeInsets.zero,
+                child: Center(
+                  child: Container(
+                    width: screenWidth * 0.8,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10.0),
+                      border: Border.all(
+                        color: const Color.fromRGBO(0, 39, 41, 1),
+                        width: 2.0,
+                      ),
+                      color: const Color.fromRGBO(0, 78, 82, 1),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: const Text(
+                      "Setup Categories",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: itemManager.categories.length,
+                  itemBuilder: (context, index) {
+                    return Dismissible(
+                      key: Key(itemManager.categories[index].name),
+                      onDismissed: (direction) {
+                        setState(() async {
+                          await DatabaseHelper()
+                              .deleteCategory(itemManager.categories[index]);
+                          itemManager.categories.removeAt(index);
+                        });
                       },
-                child: Text('Save and Continue'),
+                      child: ListTile(
+                        title: Text(itemManager.categories[index].name),
+                        subtitle: Text(
+                            'Importance: ${itemManager.categories[index].value}'),
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () {
+                            setState(() {
+                              itemManager.categories.removeAt(index);
+                            });
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+              Padding(
+                padding: EdgeInsets.all(16.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    _addTaskCategory(context, itemManager);
+                  },
+                  child: Text('Add TaskCategory'),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(16.0),
+                child: ElevatedButton(
+                  onPressed: itemManager.categories.length < 2
+                      ? null
+                      : () {
+                          _saveCategories(itemManager);
+                        },
+                  child: Text('Save and Continue'),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
-  void _addTaskCategory(BuildContext context) async {
+  void _addTaskCategory(BuildContext context, EntryManager itemManager) async {
     final nameController = TextEditingController();
     final valueController = TextEditingController();
     bool isNotValidParams = true;
@@ -165,9 +253,9 @@ class _SetupCategoriesPageState extends State<SetupCategoriesPage> {
                           name: nameController.text,
                           value: int.parse(valueController.text),
                         );
-                        _categories.add(category);
                         category.id =
                             await DatabaseHelper().addCategory(category);
+                        itemManager.addCategory(category);
                         // Close the dialog
                         Navigator.of(context).pop();
                         // Refresh the state of the SetupCategoriesPage
@@ -189,8 +277,8 @@ class _SetupCategoriesPageState extends State<SetupCategoriesPage> {
     setState(() {});
   }
 
-  void _saveCategories() async {
-    if (_categories.length < 2) {
+  void _saveCategories(EntryManager itemManager) async {
+    if (itemManager.categories.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please add at least two categories.'),
@@ -201,5 +289,45 @@ class _SetupCategoriesPageState extends State<SetupCategoriesPage> {
 
     // Call the setupCompleteCallback to notify the parent widget that the setup is complete
     widget.setupCompleteCallback();
+  }
+
+  Future<void> _selectTimeStart(
+      BuildContext context, Future<void> Function(DateTime) callback) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(selectedTimeStart),
+    );
+    if (picked != null) {
+      setState(() {
+        selectedTimeStart = DateTime(
+          1,
+          1,
+          1,
+          picked.hour,
+          picked.minute,
+        );
+      });
+      await callback(selectedTimeStart);
+    }
+  }
+
+  Future<void> _selectTimeEnd(
+      BuildContext context, Future<void> Function(DateTime) callback) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(selectedTimeEnd),
+    );
+    if (picked != null) {
+      setState(() {
+        selectedTimeEnd = DateTime(
+          1,
+          1,
+          1,
+          picked.hour,
+          picked.minute,
+        );
+      });
+      await callback(selectedTimeEnd);
+    }
   }
 }

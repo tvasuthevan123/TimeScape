@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class DateTimePicker extends StatefulWidget {
+  final Function(DateTime) onDateTimeChanged;
+  final bool showDate;
+  final bool showTime;
+
   const DateTimePicker({
     Key? key,
     required this.onDateTimeChanged,
     this.showDate = true,
     this.showTime = true,
   }) : super(key: key);
-
-  final Function(DateTime) onDateTimeChanged;
-  final bool showDate;
-  final bool showTime;
 
   @override
   State<DateTimePicker> createState() => _DateTimePickerState();
@@ -23,7 +23,7 @@ class _DateTimePickerState extends State<DateTimePicker> {
   @override
   void initState() {
     super.initState();
-    selectedDateTime = DateTime.now();
+    selectedDateTime = DateTime.now().add(const Duration(minutes: 30));
   }
 
   Future<void> _selectDate(BuildContext context) async {

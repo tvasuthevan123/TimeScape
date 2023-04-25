@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class CustomTabBar extends StatelessWidget {
-  const CustomTabBar({super.key});
+class TimeScapeTabBar extends StatelessWidget {
+  const TimeScapeTabBar({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,80 +18,47 @@ class CustomTabBar extends StatelessWidget {
         indicatorSize: TabBarIndicatorSize.label,
         labelColor: theme.primaryColorLight, // Selected icon color
         // unselectedLabelColor: theme.primaryColor,
-        tabs: <Widget>[
+        tabs: const <Widget>[
           Tab(
             child: SizedBox(
               width: 40.0,
               height: 40.0,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.0),
-                  border: Border.all(
-                    width: 2.0,
-                  ),
-                ),
-                child: const Icon(Icons.feed),
-              ),
+              child: Icon(Icons.feed),
             ),
           ),
           Tab(
             child: SizedBox(
               width: 40.0,
               height: 40.0,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.0),
-                  border: Border.all(
-                    width: 2.0,
-                  ),
-                ),
-                child: const Icon(Icons.alarm),
-              ),
+              child: Icon(Icons.alarm),
             ),
           ),
           Tab(
             child: SizedBox(
               width: 40.0,
               height: 40.0,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.0),
-                  border: Border.all(
-                    width: 2.0,
-                  ),
-                ),
-                child: const Icon(Icons.event),
-              ),
+              child: Icon(Icons.event),
             ),
           ),
           Tab(
             child: SizedBox(
               width: 40.0,
               height: 40.0,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.0),
-                  border: Border.all(
-                    width: 2.0,
-                  ),
-                ),
-                child: const Icon(Icons.calendar_today),
-              ),
+              child: Icon(Icons.calendar_today),
             ),
           ),
           Tab(
             child: SizedBox(
               width: 40.0,
               height: 40.0,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.0),
-                  border: Border.all(
-                    width: 2.0,
-                  ),
-                ),
-                child: const Icon(Icons.low_priority),
-              ),
+              child: Icon(Icons.low_priority),
+            ),
+          ),
+          Tab(
+            child: SizedBox(
+              width: 40.0,
+              height: 40.0,
+              child: Icon(Icons.settings),
             ),
           ),
         ],

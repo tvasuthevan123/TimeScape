@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:timescape/database_helper.dart';
 import 'package:timescape/entry_manager.dart';
 
 class Assignment {
@@ -23,10 +24,10 @@ class TimeBlock {
       : assignments = List.empty(growable: true);
 }
 
-List<TimeBlock> scheduler(UnmodifiableMapView<String, Task> items,
+List<Assignment> scheduler(UnmodifiableMapView<String, Entry> items,
     List<TimeBlock> timeBlocks, int breakTime) {
   for (String itemID in items.keys.toList()) {
-    Task item = items[itemID]!;
+    Task item = items[itemID]! as Task;
     Duration unassignedDuration = item.estimatedLength;
     for (TimeBlock block in timeBlocks) {
       int availability = timeAvailable(unassignedDuration, block);
@@ -59,7 +60,12 @@ List<TimeBlock> scheduler(UnmodifiableMapView<String, Task> items,
     }
   }
 
-  return timeBlocks;
+  return timeBlocks.fold<List<Assignment>>(
+    [],
+    (acc, timeBlock) {
+      return acc + timeBlock.assignments;
+    },
+  );
 }
 
 int timeAvailable(Duration unassignedDuration, TimeBlock block) {

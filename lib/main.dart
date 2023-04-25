@@ -27,7 +27,7 @@ void main() async {
 
   // Create an instance of the EntryManager and load items from the database.
   final itemManager = EntryManager();
-  await itemManager.loadEntriesFromDatabase();
+  await itemManager.loadPersistentDate();
   runApp(TimeScape(itemManager: itemManager));
 }
 
@@ -88,9 +88,7 @@ class _TimeScapeState extends State<TimeScape> {
           primaryColor: const Color.fromARGB(255, 235, 254, 255),
           platform: TargetPlatform.android,
         ),
-        home: _isCategoriesSet
-            ? const MainApp()
-            : SetupCategoriesPage(setupCallback),
+        home: _isCategoriesSet ? const MainApp() : SettingsPage(setupCallback),
       ),
     );
   }
@@ -122,7 +120,7 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
     double maxHeight = MediaQuery.of(context).size.height;
     return DefaultTabController(
       initialIndex: 1,
-      length: 5,
+      length: 6,
       child: SafeArea(
         child: Material(
           child: Stack(
@@ -187,6 +185,15 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
                             child: EisenhowerMatrix(),
                           ),
                         ),
+                        Center(
+                          child: AnimatedPadding(
+                            duration: const Duration(milliseconds: 400),
+                            padding: EdgeInsets.only(
+                              top: _isShowing ? 40 + buttonHeight : 40,
+                            ),
+                            child: SettingsPage(() {}),
+                          ),
+                        ),
                       ],
                     ),
                   )),
@@ -225,7 +232,7 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
                 visible: _isShowing,
                 child: const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: CustomTabBar(),
+                  child: TimeScapeTabBar(),
                 ),
               )
             ],
