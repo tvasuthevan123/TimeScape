@@ -1,14 +1,15 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:timescape/notification_service.dart';
 import 'package:timescape/scheduler.dart';
 import 'package:timescape/entry_manager.dart';
 import 'package:timescape/category_setup.dart';
-
-// import 'package:timescape/scheduler.dart';
+import 'package:timezone/timezone.dart';
 
 class DatabaseHelper {
   static const String dbName = 'timescape.db';
@@ -113,6 +114,18 @@ class DatabaseHelper {
 
   Future<int> addReminder(Reminder reminder) async {
     final db = await database;
+
+    NotificationDetails details =
+        NotificationService().getNotificationDetails(EntryType.reminder);
+    await NotificationService().flutterLocalNotificationsPlugin.zonedSchedule(
+        reminder.id.hashCode,
+        "TimeScape Reminder: ",
+        reminder.title,
+        TZDateTime.from(reminder.dateTime, local),
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        androidAllowWhileIdle: true,
+        details);
 
     return db.insert('reminders', reminder.toMap());
   }
