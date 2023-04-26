@@ -47,7 +47,10 @@ class _TaskTileState extends State<TaskTile>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     return Consumer<EntryManager>(builder: (context, entryManager, child) {
-      List<String> info = taskInfo(entryManager, widget.item as Task);
+      List<String> info = [];
+      if (widget.item.type == EntryType.task) {
+        info = taskInfo(entryManager, widget.item as Task);
+      }
       if (widget.item.type == EntryType.reminder) {
         info = reminderInfo(widget.item as Reminder);
       }

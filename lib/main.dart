@@ -8,6 +8,7 @@ import 'package:timescape/database_helper.dart';
 import 'package:timescape/eisenhower_display.dart';
 import 'package:timescape/entry_manager.dart';
 import 'package:timescape/list_view.dart';
+import 'package:timescape/notification_service.dart';
 import 'package:timescape/scheduler.dart';
 import './sliding_app_bar.dart';
 import './custom_tab_bar.dart';
@@ -24,7 +25,7 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
   await (DatabaseHelper().database);
-
+  await NotificationService().initNotificationsPlugin();
   // Create an instance of the EntryManager and load items from the database.
   final itemManager = EntryManager();
   await itemManager.loadPersistentDate();

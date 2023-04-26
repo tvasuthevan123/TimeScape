@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timescape/entry_manager.dart';
+import 'package:timezone/data/latest.dart';
 
 class NotificationService {
-  static late FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin;
+  static final FlutterLocalNotificationsPlugin
+      _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   FlutterLocalNotificationsPlugin get flutterLocalNotificationsPlugin =>
       _flutterLocalNotificationsPlugin;
 
-  NotificationService() {
-    _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  Future<void> initNotificationsPlugin() async {
+    initializeTimeZones();
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('app_icon');

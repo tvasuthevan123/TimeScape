@@ -117,7 +117,9 @@ class DatabaseHelper {
 
     NotificationDetails details =
         NotificationService().getNotificationDetails(EntryType.reminder);
-    await NotificationService().flutterLocalNotificationsPlugin.zonedSchedule(
+
+    print(reminder.dateTime);
+    NotificationService().flutterLocalNotificationsPlugin.zonedSchedule(
         reminder.id.hashCode,
         "TimeScape Reminder: ",
         reminder.title,

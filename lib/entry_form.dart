@@ -16,7 +16,7 @@ class _EntryFormState extends State<EntryForm> {
   EntryType _entryType = EntryType.task;
   String _entryTitle = '';
   String _entryDescription = '';
-  DateTime _dateTime = DateTime.now();
+  DateTime _dateTime = DateTime.now().add(const Duration(minutes: 30));
 
   Duration _length = const Duration(hours: 0, minutes: 15);
 
@@ -353,9 +353,9 @@ class _EntryFormState extends State<EntryForm> {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text("Time before Event Alert"),
+        const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Text("Alert Time before Event"),
         ),
         Padding(
           padding: const EdgeInsets.all(8),
@@ -376,8 +376,8 @@ class _EntryFormState extends State<EntryForm> {
         const SizedBox(height: 16),
         ToggleButtonSelection(
           buttonLabels: const [
-            'One Off'
-                'Daily',
+            'One Off',
+            'Daily',
             'Weekly',
             'Monthly',
             'Custom Interval',
@@ -390,20 +390,22 @@ class _EntryFormState extends State<EntryForm> {
         ),
         const SizedBox(height: 16),
         if (_recurrenceType == RecurrenceType.oneOff) ...[
-          _renderDateTime(false, true),
+          _renderDateTime(true, true),
         ] else if (_recurrenceType == RecurrenceType.daily) ...[
           _renderDateTime(false, true),
         ] else if (_recurrenceType == RecurrenceType.weekly) ...[
           _renderDateTime(false, true),
           const SizedBox(height: 16),
           _renderDaysOfWeek(),
-          const SizedBox(height: 16),
-          _renderDuration(),
         ] else if (_recurrenceType == RecurrenceType.custom) ...[
           _renderDateTime(true, true),
           const SizedBox(height: 16),
           _renderCustomInterval(),
         ],
+        const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Text("Duration"),
+        ),
         _renderDuration(),
       ],
     );
