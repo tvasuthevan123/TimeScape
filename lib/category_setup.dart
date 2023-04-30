@@ -39,15 +39,16 @@ class _SettingsPageState extends State<SettingsPage> {
                         color: const Color.fromRGBO(0, 39, 41, 1),
                         width: 2.0,
                       ),
-                      color: const Color.fromRGBO(0, 78, 82, 1),
+                      color: Colors.transparent,
                     ),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(8),
                     child: const Text(
                       "Setup Work Hours",
                       style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                        color: Colors.white,
+                        decoration: TextDecoration.underline,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 26,
+                        color: Color.fromRGBO(0, 39, 41, 1),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -94,7 +95,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       width: 150,
                       child: InputDecorator(
                         decoration: const InputDecoration(
-                          labelText: 'Work Day Start',
+                          labelText: 'Work Day End',
                           border: OutlineInputBorder(),
                         ),
                         child: Text(
@@ -119,15 +120,16 @@ class _SettingsPageState extends State<SettingsPage> {
                         color: const Color.fromRGBO(0, 39, 41, 1),
                         width: 2.0,
                       ),
-                      color: const Color.fromRGBO(0, 78, 82, 1),
+                      color: Colors.transparent,
                     ),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(8),
                     child: const Text(
                       "Setup Categories",
                       style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                        color: Colors.white,
+                        decoration: TextDecoration.underline,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 26,
+                        color: Color.fromRGBO(0, 39, 41, 1),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -135,33 +137,36 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               Expanded(
-                child: ListView.builder(
-                  itemCount: itemManager.categories.length,
-                  itemBuilder: (context, index) {
-                    return Dismissible(
-                      key: Key(itemManager.categories[index].name),
-                      onDismissed: (direction) {
-                        setState(() async {
-                          await DatabaseHelper()
-                              .deleteCategory(itemManager.categories[index]);
-                          itemManager.categories.removeAt(index);
-                        });
-                      },
-                      child: ListTile(
-                        title: Text(itemManager.categories[index].name),
-                        subtitle: Text(
-                            'Importance: ${itemManager.categories[index].value}'),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            setState(() {
-                              itemManager.categories.removeAt(index);
-                            });
-                          },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ListView.builder(
+                    itemCount: itemManager.categories.length,
+                    itemBuilder: (context, index) {
+                      return Dismissible(
+                        key: Key(itemManager.categories[index].name),
+                        onDismissed: (direction) {
+                          setState(() async {
+                            await DatabaseHelper()
+                                .deleteCategory(itemManager.categories[index]);
+                            itemManager.categories.removeAt(index);
+                          });
+                        },
+                        child: ListTile(
+                          title: Text(itemManager.categories[index].name),
+                          subtitle: Text(
+                              'Importance: ${itemManager.categories[index].value}'),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              setState(() {
+                                itemManager.categories.removeAt(index);
+                              });
+                            },
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
               Padding(
@@ -216,14 +221,15 @@ class _SettingsPageState extends State<SettingsPage> {
                   controller: valueController,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
-                    labelText: 'Category Value',
-                    hintText: 'Enter importance value (higher = more priority)',
+                    labelText: 'Importance',
+                    hintText: '1-10 (Most Important)',
                   ),
                   onChanged: (value) {
                     setState(() {
                       if (value.isNotEmpty) {
                         int? parsedValue = int.tryParse(value);
-                        isNotValidParams = parsedValue == null;
+                        isNotValidParams = parsedValue == null ||
+                            (parsedValue > 10 || parsedValue < 1);
                       } else {
                         isNotValidParams = true;
                       }
@@ -274,6 +280,7 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {});
   }
 
+  // Calls setState from main widget instead of inside child stateful widget
   void updateMainState() {
     setState(() {});
   }
