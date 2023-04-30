@@ -49,14 +49,20 @@ class _DayViewState extends State<DayView> {
     // ];
 
     return Consumer<EntryManager>(builder: (context, itemManager, child) {
-      return Stack(
-        children: [
-          NotificationListener<ScrollNotification>(
-            onNotification: (ScrollNotification notification) {
-              _handleScroll();
-              return true;
-            },
-            child: ListView.builder(
+      return RefreshIndicator(
+        onRefresh: () async {
+          print("Refreshed");
+          List<Event> eventsToday = await itemManager.getEventsToday();
+          List<TimeBlock> freeTimeBlocks =
+              await itemManager.getFreeTimeBlocksToday(eventsToday);
+          setState(() {
+            assignments =
+                scheduler(itemManager, freeTimeBlocks, 5, eventsToday);
+          });
+        },
+        child: Stack(
+          children: [
+            ListView.builder(
               controller: _scrollController,
               itemCount: 96,
               itemBuilder: (context, index) {
@@ -106,66 +112,45 @@ class _DayViewState extends State<DayView> {
                 );
               },
             ),
-          ),
-          ...assignments.map((assignment) {
-            double top =
-                (assignment.time.hour * 60 + assignment.time.minute) / 15 * 25 +
-                    12.5;
+            ...assignments.map((assignment) {
+              double top =
+                  (assignment.time.hour * 60 + assignment.time.minute) /
+                          15 *
+                          25 +
+                      12.5;
 
-            Entry entry = itemManager.entries[assignment.itemID]!;
-            // print(
-            // "${entry.title} - Duration - ${assignment.duration} - Time - ${assignment.time}");
-            double height = assignment.duration.inMinutes / 15 * 25;
-            return Positioned(
-                top: _overlayPosition + top,
-                left: 80,
-                width: 250,
-                height: height,
-                child: Container(
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.5),
-                        spreadRadius: 1,
-                        blurRadius: 5,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
+              Entry entry = itemManager.entries[assignment.itemID]!;
+              // print(
+              // "${entry.title} - Duration - ${assignment.duration} - Time - ${assignment.time}");
+              double height = assignment.duration.inMinutes / 15 * 25;
+              return Positioned(
+                  top: _overlayPosition + top,
+                  left: 80,
+                  width: 250,
+                  height: height,
                   child: Container(
-                    color: Colors.lightBlue,
-                    alignment: Alignment.topLeft,
-                    child: Text(
-                      entry.title,
-                      textAlign: TextAlign.left,
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.5),
+                          spreadRadius: 1,
+                          blurRadius: 5,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                  ),
-                ));
-          }).toList(),
-          Positioned(
-            bottom: 16.0,
-            right: 16.0,
-            child: FloatingActionButton(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              backgroundColor: const Color.fromRGBO(0, 39, 41, 1),
-              onPressed: () async {
-                List<Event> eventsToday = await itemManager.getEventsToday();
-                List<TimeBlock> freeTimeBlocks =
-                    await itemManager.getFreeTimeBlocksToday(eventsToday);
-                setState(() {
-                  assignments =
-                      scheduler(itemManager, freeTimeBlocks, 5, eventsToday);
-                });
-              },
-              child: const Icon(
-                Icons.add,
-                color: Colors.white,
-              ),
-            ),
-          )
-        ],
+                    child: Container(
+                      color: Colors.lightBlue,
+                      alignment: Alignment.topLeft,
+                      child: Text(
+                        entry.title,
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                  ));
+            }).toList()
+          ],
+        ),
       );
     });
   }
