@@ -143,9 +143,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                   height: maxHeight,
                   child: TabBarView(
                     controller: tabController,
-                    physics: _isShowing
-                        ? const AlwaysScrollableScrollPhysics()
-                        : const NeverScrollableScrollPhysics(),
+                    physics: const NeverScrollableScrollPhysics(),
                     children: <Widget>[
                       Center(
                         child: AnimatedPadding(

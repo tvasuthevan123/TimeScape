@@ -175,8 +175,12 @@ class EntryManager extends ChangeNotifier {
 
     Map<String, List<double>> itemFeatures = {};
     for (Task item in taskList) {
-      double lengthToDeadlineRatio = item.estimatedLength.inMinutes /
-          item.deadline.difference(DateTime.now()).inMinutes;
+      int timeTillDeadline =
+          item.deadline.difference(DateTime.now()).inMinutes > 0
+              ? item.deadline.difference(DateTime.now()).inMinutes
+              : 1;
+      double lengthToDeadlineRatio =
+          item.estimatedLength.inMinutes / timeTillDeadline;
       double normalizedImportance = _minMaxNormalization(
           categories
               .firstWhere((category) => item.categoryID == category.id)
