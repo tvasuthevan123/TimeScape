@@ -23,10 +23,8 @@ class _FocusModeState extends State<FocusMode> {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         _secondsElapsed++;
-        if (widget.task.estimatedLength > Duration.zero) {
-          widget.task.estimatedLength =
-              Duration(seconds: widget.task.estimatedLength.inSeconds - 1);
-        }
+        widget.task.timeSpent =
+            Duration(seconds: widget.task.timeSpent.inSeconds + 1);
       });
     });
   }
