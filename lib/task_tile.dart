@@ -57,6 +57,7 @@ class _TaskTileState extends State<TaskTile>
       if (widget.item.type == EntryType.event) {
         info = eventInfo(widget.item as Event);
       }
+      String tileTitle = "${widget.item.title} - ${info.removeLast()}";
       Widget infoWidget = entryInfoWidget(info);
       return Padding(
         padding: const EdgeInsets.all(10),
@@ -65,9 +66,6 @@ class _TaskTileState extends State<TaskTile>
             setState(() {
               _isExpanded = !_isExpanded;
             });
-          },
-          onLongPress: () {
-            // placeholder code for "on press and hold"
           },
           child: Stack(
             children: [
@@ -145,7 +143,7 @@ class _TaskTileState extends State<TaskTile>
                       ),
                       padding: const EdgeInsets.all(16),
                       child: Text(
-                        "${widget.item.title} - ${info[info.length - 1]}",
+                        tileTitle,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -188,9 +186,9 @@ class _TaskTileState extends State<TaskTile>
   List<String> eventInfo(Event event) {
     return [
       if (event.description.isNotEmpty) "Description: ${event.description}",
-      "Date: ${DateFormat('yyyy-MM-dd HH:mm').format(event.startDate)}",
+      "Date: ${DateFormat('dd-MM-yyyy HH:mm').format(event.startDate)}",
       "Duration: ${event.length.toString().split('.').first.padLeft(8, "0")}",
-      DateFormat('yyyy-MM-dd').format(event.startDate),
+      DateFormat('dd-MM-yyyy').format(event.startDate),
     ];
   }
 
@@ -205,9 +203,10 @@ class _TaskTileState extends State<TaskTile>
     return [
       if (task.description.isNotEmpty) "Description: ${task.description}",
       "Category: ${category.name}  Importance: ${category.value}",
-      "Deadline: ${DateFormat('yyyy-MM-dd HH:mm').format(task.deadline)}",
-      "Estimated Length: ${task.estimatedLength.toString().split('.').first.padLeft(8, "0")}",
-      DateFormat('yyyy-MM-dd').format(task.deadline),
+      "Deadline: ${DateFormat('dd-MM-yyyy HH:mm').format(task.deadline)}",
+      "Estimated Length: ${task.estimatedLength.toString().split('.').first.padLeft(6, "0")}",
+      "Time Spent: ${task.timeSpent.toString().split('.').first.padLeft(6, "0")}",
+      DateFormat('dd-MM-yyyy').format(task.deadline),
     ];
   }
 
@@ -215,8 +214,8 @@ class _TaskTileState extends State<TaskTile>
     return [
       if (reminder.description.isNotEmpty)
         "Description: ${reminder.description}",
-      "Deadline: ${DateFormat('yyyy-MM-dd HH:mm').format(reminder.dateTime)}",
-      DateFormat('yyyy-MM-dd').format(reminder.dateTime),
+      "Deadline: ${DateFormat('dd-MM-yyyy HH:mm').format(reminder.dateTime)}",
+      DateFormat('dd-MM-yyyy').format(reminder.dateTime),
     ];
   }
 }
