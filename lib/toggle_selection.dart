@@ -67,7 +67,7 @@ class _ToggleButtonSelectionState extends State<ToggleButtonSelection> {
       onPressed: _onPressed,
       children: widget.buttonLabels
           .map((label) => Padding(
-                padding: const EdgeInsets.all(1),
+                padding: const EdgeInsets.all(3),
                 child: Text(label),
               ))
           .toList(),

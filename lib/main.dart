@@ -201,7 +201,7 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
                                 child: ElevatedButton(
                                   onPressed: () async {
                                     await DatabaseHelper().resetDB();
-                                    SystemNavigator.pop();
+                                    await SystemNavigator.pop();
                                   },
                                   child: const Text('Reset App Data'),
                                 ),

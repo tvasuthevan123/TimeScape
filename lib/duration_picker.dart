@@ -26,17 +26,21 @@ class _DurationPickerState extends State<DurationPicker> {
   }
 
   void _handleHourChange(int newHours) {
-    setState(() {
-      _hours = newHours;
-      widget.onDurationChanged(Duration(hours: _hours, minutes: _minutes));
-    });
+    if (newHours >= 0) {
+      setState(() {
+        _hours = newHours;
+        widget.onDurationChanged(Duration(hours: _hours, minutes: _minutes));
+      });
+    }
   }
 
   void _handleMinuteChange(int newMinutes) {
-    setState(() {
-      _minutes = newMinutes;
-      widget.onDurationChanged(Duration(hours: _hours, minutes: _minutes));
-    });
+    if (newMinutes >= 0 && newMinutes <= 60) {
+      setState(() {
+        _minutes = newMinutes;
+        widget.onDurationChanged(Duration(hours: _hours, minutes: _minutes));
+      });
+    }
   }
 
   @override
@@ -46,7 +50,7 @@ class _DurationPickerState extends State<DurationPicker> {
       children: [
         IconButton(
           onPressed: () => _handleHourChange(_hours - 1),
-          icon: Icon(Icons.remove),
+          icon: const Icon(Icons.remove),
         ),
         SizedBox(
           width: 60,
@@ -57,11 +61,11 @@ class _DurationPickerState extends State<DurationPicker> {
         ),
         IconButton(
           onPressed: () => _handleHourChange(_hours + 1),
-          icon: Icon(Icons.add),
+          icon: const Icon(Icons.add),
         ),
         IconButton(
           onPressed: () => _handleMinuteChange(_minutes - 1),
-          icon: Icon(Icons.remove),
+          icon: const Icon(Icons.remove),
         ),
         SizedBox(
           width: 60,
@@ -72,7 +76,7 @@ class _DurationPickerState extends State<DurationPicker> {
         ),
         IconButton(
           onPressed: () => _handleMinuteChange(_minutes + 1),
-          icon: Icon(Icons.add),
+          icon: const Icon(Icons.add),
         ),
       ],
     );

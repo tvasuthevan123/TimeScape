@@ -170,16 +170,16 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(5.0),
                 child: ElevatedButton(
                   onPressed: () {
                     _addTaskCategory(context, itemManager);
                   },
-                  child: const Text('Add TaskCategory'),
+                  child: const Text('Add Category'),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.only(top: 5.0, bottom: 10.0),
                 child: ElevatedButton(
                   onPressed: itemManager.categories.length < 2
                       ? null

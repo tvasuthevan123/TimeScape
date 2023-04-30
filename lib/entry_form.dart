@@ -21,7 +21,7 @@ class _EntryFormState extends State<EntryForm> {
   Duration _length = const Duration(hours: 0, minutes: 15);
 
   Duration _reminderTimeBeforeEvent = const Duration(hours: 0, minutes: 15);
-  RecurrenceType _recurrenceType = RecurrenceType.daily;
+  RecurrenceType _recurrenceType = RecurrenceType.oneOff;
   List<int> _chosenDays = [];
   int _dayOfMonth = 0;
   int _interval = 0;
@@ -149,6 +149,13 @@ class _EntryFormState extends State<EntryForm> {
   Widget _taskForm(EntryManager itemManager) {
     return Column(
       children: [
+        const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Text("Deadline",
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+              )),
+        ),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: DateTimePicker(
@@ -355,31 +362,18 @@ class _EntryFormState extends State<EntryForm> {
       children: [
         const Padding(
           padding: EdgeInsets.all(8.0),
-          child: Text("Alert Time before Event"),
+          child: Text("Alert Time before Event",
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+              )),
         ),
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: InputDecorator(
-            decoration: InputDecoration(
-              hintText: 'Reminder time before deadline',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Colors.blue),
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: _renderTimeBeforeAlert(),
-          ),
-        ),
+        _renderTimeBeforeAlert(),
         const SizedBox(height: 16),
         ToggleButtonSelection(
           buttonLabels: const [
             'One Off',
             'Daily',
             'Weekly',
-            'Monthly',
             'Custom Interval',
           ],
           onPressCallback: (index) {
@@ -388,7 +382,15 @@ class _EntryFormState extends State<EntryForm> {
             });
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
+        const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Text("Event Date/Time",
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+              )),
+        ),
+        const SizedBox(height: 12),
         if (_recurrenceType == RecurrenceType.oneOff) ...[
           _renderDateTime(true, true),
         ] else if (_recurrenceType == RecurrenceType.daily) ...[
@@ -397,6 +399,7 @@ class _EntryFormState extends State<EntryForm> {
           _renderDateTime(false, true),
           const SizedBox(height: 16),
           _renderDaysOfWeek(),
+          const SizedBox(height: 16),
         ] else if (_recurrenceType == RecurrenceType.custom) ...[
           _renderDateTime(true, true),
           const SizedBox(height: 16),
@@ -404,7 +407,10 @@ class _EntryFormState extends State<EntryForm> {
         ],
         const Padding(
           padding: EdgeInsets.all(8.0),
-          child: Text("Duration"),
+          child: Text(
+            "Duration",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
         _renderDuration(),
       ],
