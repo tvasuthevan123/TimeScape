@@ -53,7 +53,6 @@ class EisenhowerMatrix extends StatelessWidget {
         itemCount: allTasks.length,
         itemBuilder: (BuildContext context, int index) {
           String itemId = allTasks[index][0];
-          String quadrantName = allTasks[index][1];
           String colorCode = allTasks[index][2];
           TaskTileColors color = TaskTileColors(
             tileColor: Colors.red.shade900,

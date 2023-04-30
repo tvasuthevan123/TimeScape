@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timescape/database_helper.dart';
@@ -19,6 +20,16 @@ class _DayViewState extends State<DayView> {
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScroll);
+    _loadData();
+  }
+
+  void _loadData() async {
+    final itemManager = Provider.of<EntryManager>(context, listen: false);
+    final eventsToday = await itemManager.getEventsToday();
+    final freeTimeBlocks = await itemManager.getFreeTimeBlocksToday();
+    setState(() {
+      assignments = scheduler(itemManager, freeTimeBlocks, 5, eventsToday);
+    });
   }
 
   @override
@@ -52,9 +63,9 @@ class _DayViewState extends State<DayView> {
       return RefreshIndicator(
         onRefresh: () async {
           print("Refreshed");
-          List<Event> eventsToday = await itemManager.getEventsToday();
+          final List<Event> eventsToday = await itemManager.getEventsToday();
           List<TimeBlock> freeTimeBlocks =
-              await itemManager.getFreeTimeBlocksToday(eventsToday);
+              await itemManager.getFreeTimeBlocksToday();
           setState(() {
             assignments =
                 scheduler(itemManager, freeTimeBlocks, 5, eventsToday);
@@ -123,31 +134,99 @@ class _DayViewState extends State<DayView> {
               // print(
               // "${entry.title} - Duration - ${assignment.duration} - Time - ${assignment.time}");
               double height = assignment.duration.inMinutes / 15 * 25;
+
+              final color = entry.type == EntryType.task
+                  ? const Color.fromRGBO(214, 253, 255, 1)
+                  : const Color.fromRGBO(107, 206, 218, 1);
+
+              final borderColor = entry.type == EntryType.task
+                  ? const Color.fromRGBO(0, 39, 41, 1)
+                  : const Color.fromARGB(255, 39, 136, 148);
+
+              final fontColor = entry.type == EntryType.task
+                  ? const Color.fromARGB(255, 0, 102, 107)
+                  : const Color.fromARGB(255, 6, 35, 39);
+
               return Positioned(
-                  top: _overlayPosition + top,
-                  left: 80,
-                  width: 250,
-                  height: height,
+                top: _overlayPosition + top,
+                left: 80,
+                width: 300,
+                height: height,
+                child: GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        backgroundColor: color,
+                        title: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Text(
+                            entry.title,
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              color: fontColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        content: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Text(
+                            "Time: ${DateFormat('HH:mm').format(assignment.time)}\nDuration: ${assignment.duration.toString().split('.').first.padLeft(6, "0")}",
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              color: fontColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            child: Text(
+                              "OK",
+                              textAlign: TextAlign.left,
+                              style: TextStyle(
+                                color: fontColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                   child: Container(
                     decoration: BoxDecoration(
+                      color: color,
+                      border: Border.all(
+                          color: borderColor,
+                          strokeAlign: BorderSide.strokeAlignInside),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(0.5),
+                          color: Colors.black.withOpacity(0.5),
                           spreadRadius: 1,
-                          blurRadius: 5,
-                          offset: const Offset(0, 3),
+                          blurRadius: 1,
+                          offset: const Offset(0, 1),
                         ),
                       ],
+                      borderRadius: BorderRadius.circular(3),
                     ),
-                    child: Container(
-                      color: Colors.lightBlue,
-                      alignment: Alignment.topLeft,
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
                       child: Text(
                         entry.title,
                         textAlign: TextAlign.left,
+                        style: TextStyle(
+                          color: fontColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ));
+                  ),
+                ),
+              );
             }).toList()
           ],
         ),

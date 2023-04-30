@@ -12,17 +12,17 @@ class EntryListView extends StatelessWidget {
     switch (entry.type) {
       case EntryType.reminder:
         return const TaskTileColors(
-          tileColor: Color.fromRGBO(11, 213, 156, 1),
-          tileBorderColor: Color.fromRGBO(10, 176, 130, 1),
+          tileColor: Color.fromRGBO(8, 135, 99, 1),
+          tileBorderColor: Color.fromRGBO(0, 44, 32, 1),
           innerTileColor: Color.fromRGBO(75, 225, 183, 1),
-          innerTileFontColor: Colors.white,
+          innerTileFontColor: Color.fromRGBO(3, 26, 19, 1),
         );
       case EntryType.event:
         return const TaskTileColors(
           tileColor: Color.fromRGBO(50, 162, 176, 1),
-          tileBorderColor: Color.fromRGBO(61, 199, 217, 1),
-          innerTileColor: Color.fromRGBO(107, 206, 218, 1),
-          innerTileFontColor: Colors.white,
+          tileBorderColor: Color.fromRGBO(19, 68, 75, 1),
+          innerTileColor: Color.fromRGBO(172, 242, 248, 1),
+          innerTileFontColor: Color.fromRGBO(19, 75, 83, 1),
         );
       default: // For task type
         if ((entry as Task).deadline.difference(DateTime.now()).inMilliseconds <

@@ -29,7 +29,7 @@ class _EntryFormState extends State<EntryForm> {
   int categoryID = 1;
 
   final nameController = TextEditingController();
-  bool isNotValidParams = true;
+  bool isSubmittable = false;
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +54,11 @@ class _EntryFormState extends State<EntryForm> {
               onChanged: (value) {
                 setState(() {
                   _entryTitle = value;
+                  if (value.isNotEmpty) {
+                    isSubmittable = true;
+                  } else {
+                    isSubmittable = false;
+                  }
                 });
               },
             ),
@@ -95,49 +100,51 @@ class _EntryFormState extends State<EntryForm> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
-              onPressed: () async {
-                Entry entry;
-                if (_entryType == EntryType.task) {
-                  entry = Task(
-                    title: _entryTitle,
-                    description: _entryDescription,
-                    deadline: _dateTime,
-                    estimatedLength: _length,
-                    categoryID: categoryID,
-                  );
-                  await DatabaseHelper().addTask(entry as Task);
-                } else if (_entryType == EntryType.event) {
-                  entry = Event(
-                    title: _entryTitle,
-                    description: _entryDescription,
-                    length: _length,
-                    startTime: TimeOfDay(
-                        hour: _dateTime.hour, minute: _dateTime.minute),
-                    startDate: _dateTime,
-                    reminderTimeBeforeEvent: _reminderTimeBeforeEvent,
-                    recurrence: Recurrence(
-                      type: _recurrenceType,
-                      daysOfWeek: _chosenDays,
-                      dayOfMonth: _dayOfMonth,
-                      interval: _interval,
-                    ),
-                  );
-                  await DatabaseHelper().addEvent(entry as Event);
-                } else if (_entryType == EntryType.reminder) {
-                  entry = Reminder(
-                    title: _entryTitle,
-                    description: _entryDescription,
-                    dateTime: _dateTime,
-                  );
-                  await DatabaseHelper().addReminder(entry as Reminder);
-                } else {
-                  throw Exception('Invalid entry type: $_entryType');
-                }
+              onPressed: isSubmittable
+                  ? () async {
+                      Entry entry;
+                      if (_entryType == EntryType.task) {
+                        entry = Task(
+                          title: _entryTitle,
+                          description: _entryDescription,
+                          deadline: _dateTime,
+                          estimatedLength: _length,
+                          categoryID: categoryID,
+                        );
+                        await DatabaseHelper().addTask(entry as Task);
+                      } else if (_entryType == EntryType.event) {
+                        entry = Event(
+                          title: _entryTitle,
+                          description: _entryDescription,
+                          length: _length,
+                          startTime: TimeOfDay(
+                              hour: _dateTime.hour, minute: _dateTime.minute),
+                          startDate: _dateTime,
+                          reminderTimeBeforeEvent: _reminderTimeBeforeEvent,
+                          recurrence: Recurrence(
+                            type: _recurrenceType,
+                            daysOfWeek: _chosenDays,
+                            dayOfMonth: _dayOfMonth,
+                            interval: _interval,
+                          ),
+                        );
+                        await DatabaseHelper().addEvent(entry as Event);
+                      } else if (_entryType == EntryType.reminder) {
+                        entry = Reminder(
+                          title: _entryTitle,
+                          description: _entryDescription,
+                          dateTime: _dateTime,
+                        );
+                        await DatabaseHelper().addReminder(entry as Reminder);
+                      } else {
+                        throw Exception('Invalid entry type: $_entryType');
+                      }
 
-                Provider.of<EntryManager>(context, listen: false)
-                    .addEntry(entry);
-                Navigator.pop(context);
-              },
+                      Provider.of<EntryManager>(context, listen: false)
+                          .addEntry(entry);
+                      Navigator.pop(context);
+                    }
+                  : null,
               child: const Text('Submit'),
             ),
           )

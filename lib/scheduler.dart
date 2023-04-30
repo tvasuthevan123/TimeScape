@@ -35,7 +35,10 @@ List<Assignment> scheduler(EntryManager itemManager, List<TimeBlock> timeBlocks,
   });
   for (String itemID in prioritisedItemIDs) {
     Task item = itemManager.entries[itemID]! as Task;
-    Duration unassignedDuration = item.estimatedLength;
+    Duration unassignedDuration =
+        (item.estimatedLength - item.timeSpent).inMinutes < 0
+            ? Duration.zero
+            : (item.estimatedLength - item.timeSpent);
     for (TimeBlock block in timeBlocks) {
       Duration allocatedTime = block.assignments.fold(
         Duration.zero,
@@ -56,9 +59,9 @@ List<Assignment> scheduler(EntryManager itemManager, List<TimeBlock> timeBlocks,
         block.assignments.add(Assignment(
           time: block.time.add(allocatedTime),
           itemID: itemID,
-          duration: const Duration(minutes: 30),
+          duration: unallocTime,
         ));
-        unassignedDuration -= const Duration(minutes: 30);
+        unassignedDuration -= unallocTime;
         block.duration -= const Duration(minutes: 30);
       }
 
@@ -95,8 +98,7 @@ List<Assignment> scheduler(EntryManager itemManager, List<TimeBlock> timeBlocks,
 int timeAvailable(Duration unassignedDuration, Duration unallocatedTime) {
   if (unassignedDuration <= unallocatedTime) {
     return 0;
-  } else if (unassignedDuration >= const Duration(minutes: 30) &&
-      unallocatedTime >= const Duration(minutes: 30)) {
+  } else if (unassignedDuration >= unallocatedTime) {
     return 1;
   } else {
     return -1;

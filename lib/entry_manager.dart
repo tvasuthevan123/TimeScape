@@ -70,67 +70,70 @@ class EntryManager extends ChangeNotifier {
         .cast<Event>();
   }
 
-  Future<List<TimeBlock>> getFreeTimeBlocksToday(
-      List<Event> eventsToday) async {
+  Future<List<TimeBlock>> getFreeTimeBlocksToday() async {
+    final List<Event> eventsToday = await getEventsToday();
     final List<TimeBlock> timeBlocks = [];
 
-    print("Start Work Time: ${startWorkTime}");
-    print("End Work Time: ${endWorkTime}");
+    DateTime workStartTime =
+        DateTime(1, 1, 1, startWorkTime.hour, startWorkTime.minute);
+    DateTime workEndTime =
+        DateTime(1, 1, 1, endWorkTime.hour, endWorkTime.minute);
 
-    final startWorkTimeInMinutes =
-        startWorkTime.hour * 60 + startWorkTime.minute;
-    final endWorkTimeInMinutes = endWorkTime.hour * 60 + endWorkTime.minute;
+    print("Start Time ${workStartTime}");
+    print("End Time ${workEndTime}");
+    // Sort events by start time
+    eventsToday.sort((a, b) => DateTime(
+            1, 1, 1, a.startTime.hour, a.startTime.minute)
+        .compareTo(DateTime(1, 1, 1, b.startTime.hour, b.startTime.minute)));
 
-    int previousEventEndInMinutes = startWorkTimeInMinutes;
-
-    for (var i = 0; i < eventsToday.length; i++) {
-      final event = eventsToday[i];
-      print(
-          "Event - ${event.startTime} and duration ${event.length.inMinutes}");
-      final eventStartInMinutes =
-          event.startTime.hour * 60 + event.startTime.minute;
-      final eventEndInMinutes = eventStartInMinutes + event.length.inMinutes;
-
-      if (eventStartInMinutes > previousEventEndInMinutes) {
+    if (eventsToday.isNotEmpty) {
+      Event firstEvent = eventsToday.first;
+      DateTime eventStartTime = DateTime(
+          1, 1, 1, firstEvent.startTime.hour, firstEvent.startTime.minute);
+      if (eventStartTime.isAfter(workStartTime)) {
         timeBlocks.add(TimeBlock(
-          time: DateTime(
-              event.startDate.year,
-              event.startDate.month,
-              event.startDate.day,
-              previousEventEndInMinutes ~/ 60,
-              previousEventEndInMinutes % 60),
-          duration: Duration(
-              minutes: eventStartInMinutes - previousEventEndInMinutes),
-        ));
+            time: workStartTime,
+            duration: eventStartTime.difference(workStartTime)));
       }
-
-      previousEventEndInMinutes = eventEndInMinutes;
-
-      if (i == eventsToday.length - 1 &&
-          eventEndInMinutes < endWorkTimeInMinutes) {
-        timeBlocks.add(TimeBlock(
-          time: DateTime(
-              event.startDate.year,
-              event.startDate.month,
-              event.startDate.day,
-              eventEndInMinutes ~/ 60,
-              eventEndInMinutes % 60),
-          duration: Duration(minutes: endWorkTimeInMinutes - eventEndInMinutes),
-        ));
-      }
+    } else {
+      timeBlocks.add(TimeBlock(
+          time: workStartTime,
+          duration: workEndTime.difference(workStartTime)));
     }
 
-    if (previousEventEndInMinutes < endWorkTimeInMinutes) {
-      timeBlocks.add(TimeBlock(
-        time: DateTime(
-            eventsToday.last.startDate.year,
-            eventsToday.last.startDate.month,
-            eventsToday.last.startDate.day,
-            previousEventEndInMinutes ~/ 60,
-            previousEventEndInMinutes % 60),
-        duration:
-            Duration(minutes: endWorkTimeInMinutes - previousEventEndInMinutes),
-      ));
+    // Iterate through events and create time blocks
+    for (int i = 0; i < eventsToday.length; i++) {
+      Event currentEvent = eventsToday[i];
+      DateTime currentEventStartTime = DateTime(
+          1, 1, 1, currentEvent.startTime.hour, currentEvent.startTime.minute);
+      DateTime currentEventEndTime =
+          currentEventStartTime.add(currentEvent.length);
+
+      // Check if there is time between the current event and the next one or the end of the work day
+      if (i < eventsToday.length - 1) {
+        Event nextEvent = eventsToday[i + 1];
+        DateTime nextEventStartTime = DateTime(
+            1, 1, 1, nextEvent.startTime.hour, nextEvent.startTime.minute);
+        if (nextEventStartTime.isAfter(currentEventEndTime)) {
+          if (nextEventStartTime.isBefore(workEndTime)) {
+            print(
+                "Duration 1: ${nextEventStartTime.difference(currentEventEndTime)}");
+            timeBlocks.add(TimeBlock(
+                time: currentEventEndTime,
+                duration: nextEventStartTime.difference(currentEventEndTime)));
+          } else {
+            print("Duration 2: ${workEndTime.difference(currentEventEndTime)}");
+            timeBlocks.add(TimeBlock(
+                time: currentEventEndTime,
+                duration: workEndTime.difference(currentEventEndTime)));
+          }
+        }
+      } else if (currentEventEndTime.isBefore(workEndTime)) {
+        print("Duration 3: ${workEndTime.difference(currentEventEndTime)}");
+        timeBlocks.add(TimeBlock(
+            time: currentEventEndTime,
+            duration: workEndTime.difference(currentEventEndTime)));
+      }
     }
 
     return timeBlocks;
