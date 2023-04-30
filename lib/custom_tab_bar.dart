@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
 class TimeScapeTabBar extends StatelessWidget {
-  const TimeScapeTabBar({super.key});
+  final TabController tabController;
+  final Function(int) tabChoiceCallback;
+  const TimeScapeTabBar(
+      {super.key,
+      required this.tabChoiceCallback,
+      required this.tabController});
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +20,8 @@ class TimeScapeTabBar extends StatelessWidget {
         border: Border.all(width: 2),
       ),
       child: TabBar(
+        controller: tabController,
+        onTap: tabChoiceCallback,
         indicatorSize: TabBarIndicatorSize.label,
         labelColor: theme.primaryColorLight, // Selected icon color
         // unselectedLabelColor: theme.primaryColor,

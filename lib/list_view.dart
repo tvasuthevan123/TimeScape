@@ -61,43 +61,6 @@ class EntryListView extends StatelessWidget {
                     key: Key(itemKeys[index]), item: item, colors: colors);
               },
             ),
-            Positioned(
-              bottom: 16.0,
-              right: 16.0,
-              child: FloatingActionButton(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                backgroundColor: const Color.fromRGBO(0, 39, 41, 1),
-                onPressed: () {
-                  String itemTitle = '';
-                  String itemDescription = '';
-                  DateTime deadline = DateTime.now();
-                  Duration duration = const Duration(hours: 0, minutes: 15);
-                  EntryType entryType = EntryType.task;
-                  showModalBottomSheet(
-                    context: context,
-                    builder: (BuildContext context) {
-                      final double bottomPadding = max(
-                        MediaQuery.of(context).viewInsets.bottom,
-                        MediaQuery.of(context).size.height *
-                            0.05, // Add a minimum padding of 5% of the screen height
-                      );
-                      return SingleChildScrollView(
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: bottomPadding),
-                          child: EntryForm(),
-                        ),
-                      );
-                    },
-                  );
-                },
-                child: const Icon(
-                  Icons.add,
-                  color: Colors.white,
-                ),
-              ),
-            ),
           ],
         );
       },

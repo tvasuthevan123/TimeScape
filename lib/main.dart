@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +8,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:timescape/category_setup.dart';
 import 'package:timescape/database_helper.dart';
 import 'package:timescape/eisenhower_display.dart';
+import 'package:timescape/entry_form.dart';
 import 'package:timescape/entry_manager.dart';
 import 'package:timescape/list_view.dart';
 import 'package:timescape/notification_service.dart';
@@ -102,9 +105,10 @@ class MainApp extends StatefulWidget {
   State<MainApp> createState() => _MainAppState();
 }
 
-class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
+class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
   bool _isShowing = false;
   late final AnimationController _controller;
+  late TabController tabController;
 
   @override
   void initState() {
@@ -113,145 +117,189 @@ class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
+    tabController = TabController(length: 6, vsync: this, initialIndex: 0);
+  }
+
+  void setSelectedTab(int index) {
+    setState(
+      () {
+        tabController.index = index;
+        tabController.animateTo(index, curve: Curves.decelerate);
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     double maxWidth = MediaQuery.of(context).size.width;
     double maxHeight = MediaQuery.of(context).size.height;
-    return DefaultTabController(
-      initialIndex: 1,
-      length: 6,
-      child: SafeArea(
-        child: Material(
-          child: Stack(
-            children: [
-              Container(
-                  color: const Color.fromARGB(255, 235, 254, 255),
-                  child: SizedBox(
-                    height: maxHeight,
-                    child: TabBarView(
-                      physics: _isShowing
-                          ? const AlwaysScrollableScrollPhysics()
-                          : const NeverScrollableScrollPhysics(),
-                      children: <Widget>[
-                        Center(
-                          child: AnimatedPadding(
-                            duration: const Duration(milliseconds: 400),
-                            padding: EdgeInsets.only(
-                              top: _isShowing ? 40 + buttonHeight : 40,
-                            ),
-                            child: const EntryListView(
-                              entryType: EntryType.task,
-                            ),
+    return SafeArea(
+      child: Material(
+        child: Stack(
+          children: [
+            Container(
+                color: const Color.fromARGB(255, 235, 254, 255),
+                child: SizedBox(
+                  height: maxHeight,
+                  child: TabBarView(
+                    controller: tabController,
+                    physics: _isShowing
+                        ? const AlwaysScrollableScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
+                    children: <Widget>[
+                      Center(
+                        child: AnimatedPadding(
+                          duration: const Duration(milliseconds: 400),
+                          padding: EdgeInsets.only(
+                            top: _isShowing ? 40 + buttonHeight : 40,
+                          ),
+                          child: const EntryListView(
+                            entryType: EntryType.task,
                           ),
                         ),
-                        Center(
-                          child: AnimatedPadding(
-                            duration: const Duration(milliseconds: 400),
-                            padding: EdgeInsets.only(
-                              top: _isShowing ? 40 + buttonHeight : 40,
-                            ),
-                            child: const EntryListView(
-                              entryType: EntryType.reminder,
-                            ),
-                          ),
-                        ),
-                        Center(
-                          child: AnimatedPadding(
-                            duration: const Duration(milliseconds: 400),
-                            padding: EdgeInsets.only(
-                              top: _isShowing ? 40 + buttonHeight : 40,
-                            ),
-                            child: const EntryListView(
-                              entryType: EntryType.event,
-                            ),
-                          ),
-                        ),
-                        Center(
-                          child: AnimatedPadding(
-                            duration: const Duration(milliseconds: 400),
-                            padding: EdgeInsets.only(
-                              top: _isShowing ? 40 + buttonHeight : 40,
-                            ),
-                            child: DayView(),
-                          ),
-                        ),
-                        Center(
-                          child: AnimatedPadding(
-                            duration: const Duration(milliseconds: 400),
-                            padding: EdgeInsets.only(
-                              top: _isShowing ? 40 + buttonHeight : 40,
-                            ),
-                            child: EisenhowerMatrix(),
-                          ),
-                        ),
-                        Center(
-                          child: AnimatedPadding(
-                            duration: const Duration(milliseconds: 400),
-                            padding: EdgeInsets.only(
-                              top: _isShowing ? 40 + buttonHeight : 40,
-                            ),
-                            child: Column(children: [
-                              Expanded(
-                                child: SettingsPage(() {}),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: ElevatedButton(
-                                  onPressed: () async {
-                                    await DatabaseHelper().resetDB();
-                                    await SystemNavigator.pop();
-                                  },
-                                  child: const Text('Reset App Data'),
-                                ),
-                              ),
-                            ]),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )),
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 400),
-                left: maxWidth * 0.4,
-                right: maxWidth * 0.4,
-                top: _isShowing ? buttonHeight : 0,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    backgroundColor: Colors.transparent,
-                    side: const BorderSide(
-                      width: 3.0,
-                    ),
-                    padding: EdgeInsets.zero,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(20),
-                        bottomRight: Radius.circular(20),
                       ),
+                      Center(
+                        child: AnimatedPadding(
+                          duration: const Duration(milliseconds: 400),
+                          padding: EdgeInsets.only(
+                            top: _isShowing ? 40 + buttonHeight : 40,
+                          ),
+                          child: const EntryListView(
+                            entryType: EntryType.reminder,
+                          ),
+                        ),
+                      ),
+                      Center(
+                        child: AnimatedPadding(
+                          duration: const Duration(milliseconds: 400),
+                          padding: EdgeInsets.only(
+                            top: _isShowing ? 40 + buttonHeight : 40,
+                          ),
+                          child: const EntryListView(
+                            entryType: EntryType.event,
+                          ),
+                        ),
+                      ),
+                      Center(
+                        child: AnimatedPadding(
+                          duration: const Duration(milliseconds: 400),
+                          padding: EdgeInsets.only(
+                            top: _isShowing ? 40 + buttonHeight : 40,
+                          ),
+                          child: DayView(),
+                        ),
+                      ),
+                      Center(
+                        child: AnimatedPadding(
+                          duration: const Duration(milliseconds: 400),
+                          padding: EdgeInsets.only(
+                            top: _isShowing ? 40 + buttonHeight : 40,
+                          ),
+                          child: EisenhowerMatrix(),
+                        ),
+                      ),
+                      Center(
+                        child: AnimatedPadding(
+                          duration: const Duration(milliseconds: 400),
+                          padding: EdgeInsets.only(
+                            top: _isShowing ? 40 + buttonHeight : 40,
+                          ),
+                          child: Column(children: [
+                            Expanded(
+                              child: SettingsPage(() {}),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  await DatabaseHelper().resetDB();
+                                  await SystemNavigator.pop();
+                                },
+                                child: const Text('Reset App Data'),
+                              ),
+                            ),
+                          ]),
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 400),
+              left: maxWidth * 0.4,
+              right: maxWidth * 0.4,
+              top: _isShowing ? buttonHeight : 0,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  backgroundColor: Colors.transparent,
+                  side: const BorderSide(
+                    width: 3.0,
+                  ),
+                  padding: EdgeInsets.zero,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
                     ),
                   ),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isShowing = !_isShowing;
+                  });
+                },
+                child: const Icon(
+                  Icons.menu_rounded,
+                ),
+              ),
+            ),
+            SlidingAppBar(
+              controller: _controller,
+              visible: _isShowing,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: TimeScapeTabBar(
+                    tabController: tabController,
+                    tabChoiceCallback: setSelectedTab),
+              ),
+            ),
+            Positioned(
+              bottom: 16.0,
+              right: 16.0,
+              child: AnimatedOpacity(
+                opacity: tabController.index != 5 ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                child: FloatingActionButton(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  backgroundColor: const Color.fromRGBO(0, 39, 41, 1),
                   onPressed: () {
-                    setState(() {
-                      _isShowing = !_isShowing;
-                    });
+                    showModalBottomSheet(
+                      context: context,
+                      builder: (BuildContext context) {
+                        final double bottomPadding = max(
+                          MediaQuery.of(context).viewInsets.bottom,
+                          MediaQuery.of(context).size.height * 0.05,
+                        );
+                        return SingleChildScrollView(
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: bottomPadding),
+                            child: const EntryForm(),
+                          ),
+                        );
+                      },
+                    );
                   },
                   child: const Icon(
-                    Icons.menu_rounded,
+                    Icons.add,
+                    color: Colors.white,
                   ),
                 ),
               ),
-              SlidingAppBar(
-                controller: _controller,
-                visible: _isShowing,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: TimeScapeTabBar(),
-                ),
-              )
-            ],
-          ),
+            )
+          ],
         ),
       ),
     );
