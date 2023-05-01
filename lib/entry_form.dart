@@ -13,18 +13,18 @@ class EntryForm extends StatefulWidget {
 }
 
 class _EntryFormState extends State<EntryForm> {
-  EntryType _entryType = EntryType.task;
-  String _entryTitle = '';
-  String _entryDescription = '';
-  DateTime _dateTime = DateTime.now().add(const Duration(minutes: 30));
+  EntryType entryType = EntryType.task;
+  String entryTitle = '';
+  String entryDescription = '';
+  DateTime dateTime = DateTime.now().add(const Duration(minutes: 30));
 
-  Duration _length = const Duration(hours: 0, minutes: 15);
+  Duration length = const Duration(hours: 0, minutes: 15);
 
-  Duration _reminderTimeBeforeEvent = const Duration(hours: 0, minutes: 15);
-  RecurrenceType _recurrenceType = RecurrenceType.oneOff;
-  List<int> _chosenDays = [];
-  int _dayOfMonth = 0;
-  int _interval = 0;
+  Duration timeBeforeEventReminder = const Duration(hours: 0, minutes: 15);
+  RecurrenceType recurrenceType = RecurrenceType.oneOff;
+  List<int> chosenDays = [];
+  int dayOfMonth = 0;
+  int interval = 0;
 
   int categoryID = 1;
 
@@ -53,7 +53,7 @@ class _EntryFormState extends State<EntryForm> {
               ),
               onChanged: (value) {
                 setState(() {
-                  _entryTitle = value;
+                  entryTitle = value;
                   if (value.isNotEmpty) {
                     isSubmittable = true;
                   } else {
@@ -78,7 +78,7 @@ class _EntryFormState extends State<EntryForm> {
               ),
               onChanged: (value) {
                 setState(() {
-                  _entryDescription = value;
+                  entryDescription = value;
                 });
               },
             ),
@@ -89,55 +89,55 @@ class _EntryFormState extends State<EntryForm> {
               buttonLabels: const ['Task', 'Reminder', 'Event'],
               onPressCallback: (selected) {
                 setState(() {
-                  _entryType = EntryType.values[selected[0]];
+                  entryType = EntryType.values[selected[0]];
                 });
               },
             ),
           ),
-          if (_entryType == EntryType.task) _taskForm(itemManager),
-          if (_entryType == EntryType.event) _eventForm(),
-          if (_entryType == EntryType.reminder) _reminderForm(),
+          if (entryType == EntryType.task) taskForm(itemManager),
+          if (entryType == EntryType.event) eventForm(),
+          if (entryType == EntryType.reminder) reminderForm(),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
               onPressed: isSubmittable
                   ? () async {
                       Entry entry;
-                      if (_entryType == EntryType.task) {
+                      if (entryType == EntryType.task) {
                         entry = Task(
-                          title: _entryTitle,
-                          description: _entryDescription,
-                          deadline: _dateTime,
-                          estimatedLength: _length,
+                          title: entryTitle,
+                          description: entryDescription,
+                          deadline: dateTime,
+                          estimatedLength: length,
                           categoryID: categoryID,
                         );
                         await DatabaseHelper().addTask(entry as Task);
-                      } else if (_entryType == EntryType.event) {
+                      } else if (entryType == EntryType.event) {
                         entry = Event(
-                          title: _entryTitle,
-                          description: _entryDescription,
-                          length: _length,
+                          title: entryTitle,
+                          description: entryDescription,
+                          length: length,
                           startTime: TimeOfDay(
-                              hour: _dateTime.hour, minute: _dateTime.minute),
-                          startDate: _dateTime,
-                          reminderTimeBeforeEvent: _reminderTimeBeforeEvent,
+                              hour: dateTime.hour, minute: dateTime.minute),
+                          startDate: dateTime,
+                          reminderTimeBeforeEvent: timeBeforeEventReminder,
                           recurrence: Recurrence(
-                            type: _recurrenceType,
-                            daysOfWeek: _chosenDays,
-                            dayOfMonth: _dayOfMonth,
-                            interval: _interval,
+                            type: recurrenceType,
+                            daysOfWeek: chosenDays,
+                            dayOfMonth: dayOfMonth,
+                            interval: interval,
                           ),
                         );
                         await DatabaseHelper().addEvent(entry as Event);
-                      } else if (_entryType == EntryType.reminder) {
+                      } else if (entryType == EntryType.reminder) {
                         entry = Reminder(
-                          title: _entryTitle,
-                          description: _entryDescription,
-                          dateTime: _dateTime,
+                          title: entryTitle,
+                          description: entryDescription,
+                          dateTime: dateTime,
                         );
                         await DatabaseHelper().addReminder(entry as Reminder);
                       } else {
-                        throw Exception('Invalid entry type: $_entryType');
+                        throw Exception('Invalid entry type: $entryType');
                       }
 
                       Provider.of<EntryManager>(context, listen: false)
@@ -153,7 +153,7 @@ class _EntryFormState extends State<EntryForm> {
     });
   }
 
-  Widget _taskForm(EntryManager itemManager) {
+  Widget taskForm(EntryManager itemManager) {
     return Column(
       children: [
         const Padding(
@@ -168,7 +168,7 @@ class _EntryFormState extends State<EntryForm> {
           child: DateTimePicker(
             onDateTimeChanged: (DateTime newDateTime) {
               setState(() {
-                _dateTime = newDateTime;
+                dateTime = newDateTime;
               });
             },
           ),
@@ -176,10 +176,10 @@ class _EntryFormState extends State<EntryForm> {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: DurationPicker(
-            initialDuration: _length,
+            initialDuration: length,
             onDurationChanged: (Duration newDuration) {
               setState(() {
-                _length = newDuration;
+                length = newDuration;
               });
             },
           ),
@@ -208,7 +208,7 @@ class _EntryFormState extends State<EntryForm> {
     );
   }
 
-  Widget _reminderForm() {
+  Widget reminderForm() {
     return Column(
       children: [
         Padding(
@@ -216,7 +216,7 @@ class _EntryFormState extends State<EntryForm> {
           child: DateTimePicker(
             onDateTimeChanged: (DateTime newDate) {
               setState(() {
-                _dateTime = newDate;
+                dateTime = newDate;
               });
             },
           ),
@@ -225,7 +225,7 @@ class _EntryFormState extends State<EntryForm> {
     );
   }
 
-  Widget _eventForm() {
+  Widget eventForm() {
     const List<String> daysOfWeek = [
       "Mon",
       "Tues",
@@ -236,7 +236,7 @@ class _EntryFormState extends State<EntryForm> {
       "Sun"
     ];
 
-    Widget _renderDateTime(bool showDate, bool showTime) {
+    Widget renderDateTime(bool showDate, bool showTime) {
       return Column(
         children: [
           DateTimePicker(
@@ -244,23 +244,23 @@ class _EntryFormState extends State<EntryForm> {
             showTime: showTime,
             onDateTimeChanged: (DateTime newDate) {
               setState(() {
-                _dateTime = newDate;
+                dateTime = newDate;
               });
             },
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
         ],
       );
     }
 
-    Widget _renderDuration() {
+    Widget renderDuration() {
       return Column(
         children: [
           DurationPicker(
-            initialDuration: _length,
+            initialDuration: length,
             onDurationChanged: (Duration newDuration) {
               setState(() {
-                _length = newDuration;
+                length = newDuration;
               });
             },
           ),
@@ -268,14 +268,14 @@ class _EntryFormState extends State<EntryForm> {
       );
     }
 
-    Widget _renderTimeBeforeAlert() {
+    Widget renderTimeBeforeAlert() {
       return Column(
         children: [
           DurationPicker(
-            initialDuration: _length,
+            initialDuration: length,
             onDurationChanged: (Duration newDuration) {
               setState(() {
-                _reminderTimeBeforeEvent = newDuration;
+                timeBeforeEventReminder = newDuration;
               });
             },
           ),
@@ -283,54 +283,19 @@ class _EntryFormState extends State<EntryForm> {
       );
     }
 
-    Widget _renderDaysOfWeek() {
+    Widget renderDaysOfWeek() {
       return ToggleButtonSelection(
         buttonLabels: daysOfWeek,
         allowMultipleSelection: true,
         onPressCallback: (indices) {
           setState(() {
-            _chosenDays = indices;
+            chosenDays = indices;
           });
         },
       );
     }
 
-    Widget _renderDayOfMonth() {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: TextFormField(
-          decoration: InputDecoration(
-            labelText: 'Day of month',
-            hintText: 'Enter day of month (1-31)',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: Colors.blue),
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          keyboardType: TextInputType.number,
-          validator: (value) {
-            if (value!.isEmpty) {
-              return 'Please enter a day of the month';
-            }
-            final dayOfMonth = int.tryParse(value);
-            if (dayOfMonth == null || dayOfMonth < 1 || dayOfMonth > 31) {
-              return 'Please enter a valid day of the month';
-            }
-            return null;
-          },
-          onSaved: (value) {
-            setState(() {
-              _dayOfMonth = int.tryParse(value!)!;
-            });
-          },
-        ),
-      );
-    }
-
-    Widget _renderCustomInterval() {
+    Widget renderCustomInterval() {
       return Padding(
         padding: const EdgeInsets.all(8.0),
         child: TextFormField(
@@ -358,7 +323,7 @@ class _EntryFormState extends State<EntryForm> {
           },
           onSaved: (value) {
             setState(() {
-              _interval = int.tryParse(value!)!;
+              interval = int.tryParse(value!)!;
             });
           },
         ),
@@ -374,7 +339,7 @@ class _EntryFormState extends State<EntryForm> {
                 fontWeight: FontWeight.w900,
               )),
         ),
-        _renderTimeBeforeAlert(),
+        renderTimeBeforeAlert(),
         const SizedBox(height: 16),
         ToggleButtonSelection(
           buttonLabels: const [
@@ -385,7 +350,7 @@ class _EntryFormState extends State<EntryForm> {
           ],
           onPressCallback: (index) {
             setState(() {
-              _recurrenceType = RecurrenceType.values[index[0]];
+              recurrenceType = RecurrenceType.values[index[0]];
             });
           },
         ),
@@ -398,19 +363,19 @@ class _EntryFormState extends State<EntryForm> {
               )),
         ),
         const SizedBox(height: 12),
-        if (_recurrenceType == RecurrenceType.oneOff) ...[
-          _renderDateTime(true, true),
-        ] else if (_recurrenceType == RecurrenceType.daily) ...[
-          _renderDateTime(false, true),
-        ] else if (_recurrenceType == RecurrenceType.weekly) ...[
-          _renderDateTime(false, true),
+        if (recurrenceType == RecurrenceType.oneOff) ...[
+          renderDateTime(true, true),
+        ] else if (recurrenceType == RecurrenceType.daily) ...[
+          renderDateTime(false, true),
+        ] else if (recurrenceType == RecurrenceType.weekly) ...[
+          renderDateTime(false, true),
           const SizedBox(height: 16),
-          _renderDaysOfWeek(),
+          renderDaysOfWeek(),
           const SizedBox(height: 16),
-        ] else if (_recurrenceType == RecurrenceType.custom) ...[
-          _renderDateTime(true, true),
+        ] else if (recurrenceType == RecurrenceType.custom) ...[
+          renderDateTime(true, true),
           const SizedBox(height: 16),
-          _renderCustomInterval(),
+          renderCustomInterval(),
         ],
         const Padding(
           padding: EdgeInsets.all(8.0),
@@ -419,7 +384,7 @@ class _EntryFormState extends State<EntryForm> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
-        _renderDuration(),
+        renderDuration(),
       ],
     );
   }

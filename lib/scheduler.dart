@@ -69,12 +69,6 @@ List<Assignment> scheduler(EntryManager itemManager, List<TimeBlock> timeBlocks,
         break;
       }
     }
-
-    if (unassignedDuration > Duration.zero &&
-        item.urgency >= 0.8 &&
-        item.isSoftDeadline == false) {
-      warning();
-    }
   }
 
   List<Assignment> assignments = timeBlocks.fold<List<Assignment>>(

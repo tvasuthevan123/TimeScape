@@ -9,7 +9,8 @@ import 'package:timescape/entry_manager.dart';
 class SettingsPage extends StatefulWidget {
   final VoidCallback setupCompleteCallback;
 
-  const SettingsPage(this.setupCompleteCallback);
+  const SettingsPage({Key? key, required this.setupCompleteCallback})
+      : super(key: key);
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -63,7 +64,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 children: [
                   InkWell(
                     onTap: () {
-                      _selectTimeStart(context, (DateTime selectedTime) async {
+                      selectTimeStart(context, (DateTime selectedTime) async {
                         await itemManager.setStartWorkTime(
                             selectedTime.hour * 60 + selectedTime.minute);
                       });
@@ -86,7 +87,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   InkWell(
                     onTap: () {
-                      _selectTimeEnd(context, (DateTime selectedTime) async {
+                      selectTimeEnd(context, (DateTime selectedTime) async {
                         await itemManager.setEndWorkTime(
                             selectedTime.hour * 60 + selectedTime.minute);
                       });
@@ -173,7 +174,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 padding: const EdgeInsets.all(5.0),
                 child: ElevatedButton(
                   onPressed: () {
-                    _addTaskCategory(context, itemManager);
+                    addTaskCategory(context, itemManager);
                   },
                   child: const Text('Add Category'),
                 ),
@@ -184,7 +185,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   onPressed: itemManager.categories.length < 2
                       ? null
                       : () {
-                          _saveCategories(itemManager);
+                          saveCategories(itemManager);
                         },
                   child: const Text('Save and Continue'),
                 ),
@@ -196,7 +197,7 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
-  void _addTaskCategory(BuildContext context, EntryManager itemManager) async {
+  void addTaskCategory(BuildContext context, EntryManager itemManager) async {
     final nameController = TextEditingController();
     final valueController = TextEditingController();
     bool isNotValidParams = true;
@@ -263,10 +264,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         category.id =
                             await DatabaseHelper().addCategory(category);
                         itemManager.addCategory(category);
-                        // Close the dialog
                         Navigator.of(context).pop();
-                        // Refresh the state of the SetupCategoriesPage
-                        setState(() {});
+                        updateMainState();
                       },
                 child: const Text('Submit'),
               ),
@@ -276,16 +275,14 @@ class _SettingsPageState extends State<SettingsPage> {
       },
     );
 
-    // Update the state of the parent widget after closing the dialog
-    setState(() {});
+    updateMainState();
   }
 
-  // Calls setState from main widget instead of inside child stateful widget
   void updateMainState() {
     setState(() {});
   }
 
-  void _saveCategories(EntryManager itemManager) async {
+  void saveCategories(EntryManager itemManager) async {
     if (itemManager.categories.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -295,11 +292,10 @@ class _SettingsPageState extends State<SettingsPage> {
       return;
     }
 
-    // Call the setupCompleteCallback to notify the parent widget that the setup is complete
     widget.setupCompleteCallback();
   }
 
-  Future<void> _selectTimeStart(
+  Future<void> selectTimeStart(
       BuildContext context, Future<void> Function(DateTime) callback) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -319,7 +315,7 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  Future<void> _selectTimeEnd(
+  Future<void> selectTimeEnd(
       BuildContext context, Future<void> Function(DateTime) callback) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,

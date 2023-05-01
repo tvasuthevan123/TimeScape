@@ -11,8 +11,6 @@ import 'package:uuid/uuid.dart';
 const timeLeeway = Duration(days: 3);
 
 class EntryManager extends ChangeNotifier {
-  /// Internal, private state of the cart.
-
   TimeOfDay startWorkTime = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay endWorkTime = const TimeOfDay(hour: 17, minute: 0);
   final Map<String, Entry> _entries = {};
@@ -21,13 +19,13 @@ class EntryManager extends ChangeNotifier {
       UnmodifiableMapView<String, Entry>(_entries);
 
   EntryManager({Key? key}) {
-    // _generateEntrys(1);
-    // _generateEntrys(2);
-    // _generateEntrys(5);
-    // _generateEntrys(8);
+    // generateEntrys(1);
+    // generateEntrys(2);
+    // generateEntrys(5);
+    // generateEntrys(8);
   }
 
-  void _generateEntrys(int importance) {
+  void generateEntrys(int importance) {
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 4; j++) {
         int estimatedLength = (i + 1) * 5;
@@ -81,6 +79,7 @@ class EntryManager extends ChangeNotifier {
 
     print("Start Time ${workStartTime}");
     print("End Time ${workEndTime}");
+
     // Sort events by start time
     eventsToday.sort((a, b) => DateTime(
             1, 1, 1, a.startTime.hour, a.startTime.minute)
@@ -101,7 +100,7 @@ class EntryManager extends ChangeNotifier {
           duration: workEndTime.difference(workStartTime)));
     }
 
-    // Iterate through events and create time blocks
+    // Iterate through events to check free time between
     for (int i = 0; i < eventsToday.length; i++) {
       Event currentEvent = eventsToday[i];
       DateTime currentEventStartTime = DateTime(
@@ -109,27 +108,23 @@ class EntryManager extends ChangeNotifier {
       DateTime currentEventEndTime =
           currentEventStartTime.add(currentEvent.length);
 
-      // Check if there is time between the current event and the next one or the end of the work day
+      // Check if time between the current event and next one (or end of day)
       if (i < eventsToday.length - 1) {
         Event nextEvent = eventsToday[i + 1];
         DateTime nextEventStartTime = DateTime(
             1, 1, 1, nextEvent.startTime.hour, nextEvent.startTime.minute);
         if (nextEventStartTime.isAfter(currentEventEndTime)) {
           if (nextEventStartTime.isBefore(workEndTime)) {
-            print(
-                "Duration 1: ${nextEventStartTime.difference(currentEventEndTime)}");
             timeBlocks.add(TimeBlock(
                 time: currentEventEndTime,
                 duration: nextEventStartTime.difference(currentEventEndTime)));
           } else {
-            print("Duration 2: ${workEndTime.difference(currentEventEndTime)}");
             timeBlocks.add(TimeBlock(
                 time: currentEventEndTime,
                 duration: workEndTime.difference(currentEventEndTime)));
           }
         }
       } else if (currentEventEndTime.isBefore(workEndTime)) {
-        print("Duration 3: ${workEndTime.difference(currentEventEndTime)}");
         timeBlocks.add(TimeBlock(
             time: currentEventEndTime,
             duration: workEndTime.difference(currentEventEndTime)));
@@ -139,11 +134,11 @@ class EntryManager extends ChangeNotifier {
     return timeBlocks;
   }
 
-  double _minMaxNormalization(double value, double min, double max) {
+  double minMaxNormalization(double value, double min, double max) {
     return (value - min) / (max - min);
   }
 
-  double _euclideanDistance(List<double> pointA, List<double> pointB) {
+  double euclideanDistance(List<double> pointA, List<double> pointB) {
     double sum = 0;
     for (int i = 0; i < pointA.length; i++) {
       sum += pow(pointA[i] - pointB[i], 2);
@@ -184,7 +179,7 @@ class EntryManager extends ChangeNotifier {
               : 1;
       double lengthToDeadlineRatio =
           item.estimatedLength.inMinutes / timeTillDeadline;
-      double normalizedImportance = _minMaxNormalization(
+      double normalizedImportance = minMaxNormalization(
           categories
               .firstWhere((category) => item.categoryID == category.id)
               .value
@@ -233,7 +228,7 @@ class EntryManager extends ChangeNotifier {
       int minIndex = 0;
 
       for (int i = 0; i < centroids.length; i++) {
-        double distance = _euclideanDistance(itemCoordinates, centroids[i]);
+        double distance = euclideanDistance(itemCoordinates, centroids[i]);
         if (distance < minDistance) {
           minDistance = distance;
           minIndex = i;
@@ -258,6 +253,7 @@ class EntryManager extends ChangeNotifier {
       // print(
       //     "${items[itemId]?.importance},${items[itemId]?.estimatedLength.inMinutes}min, ${items[itemId]?.deadline.difference(DateTime.now()).inDays}days, $quadrant");
       // Assign the quadrant index (0-3) to the item
+
       eisenhowerQuadrants[minIndex].add(itemId);
     }
 

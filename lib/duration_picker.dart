@@ -15,30 +15,30 @@ class DurationPicker extends StatefulWidget {
 }
 
 class _DurationPickerState extends State<DurationPicker> {
-  late int _hours;
-  late int _minutes;
+  late int hours;
+  late int minutes;
 
   @override
   void initState() {
     super.initState();
-    _hours = widget.initialDuration.inHours;
-    _minutes = widget.initialDuration.inMinutes % 60;
+    hours = widget.initialDuration.inHours;
+    minutes = widget.initialDuration.inMinutes % 60;
   }
 
-  void _handleHourChange(int newHours) {
+  void handleHourChange(int newHours) {
     if (newHours >= 0) {
       setState(() {
-        _hours = newHours;
-        widget.onDurationChanged(Duration(hours: _hours, minutes: _minutes));
+        hours = newHours;
+        widget.onDurationChanged(Duration(hours: hours, minutes: minutes));
       });
     }
   }
 
-  void _handleMinuteChange(int newMinutes) {
+  void handleMinuteChange(int newMinutes) {
     if (newMinutes >= 0 && newMinutes <= 60) {
       setState(() {
-        _minutes = newMinutes;
-        widget.onDurationChanged(Duration(hours: _hours, minutes: _minutes));
+        minutes = newMinutes;
+        widget.onDurationChanged(Duration(hours: hours, minutes: minutes));
       });
     }
   }
@@ -49,33 +49,33 @@ class _DurationPickerState extends State<DurationPicker> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton(
-          onPressed: () => _handleHourChange(_hours - 1),
+          onPressed: () => handleHourChange(hours - 1),
           icon: const Icon(Icons.remove),
         ),
         SizedBox(
           width: 60,
           child: Text(
-            '$_hours h',
+            '$hours h',
             textAlign: TextAlign.center,
           ),
         ),
         IconButton(
-          onPressed: () => _handleHourChange(_hours + 1),
+          onPressed: () => handleHourChange(hours + 1),
           icon: const Icon(Icons.add),
         ),
         IconButton(
-          onPressed: () => _handleMinuteChange(_minutes - 1),
+          onPressed: () => handleMinuteChange(minutes - 1),
           icon: const Icon(Icons.remove),
         ),
         SizedBox(
           width: 60,
           child: Text(
-            '$_minutes min',
+            '$minutes min',
             textAlign: TextAlign.center,
           ),
         ),
         IconButton(
-          onPressed: () => _handleMinuteChange(_minutes + 1),
+          onPressed: () => handleMinuteChange(minutes + 1),
           icon: const Icon(Icons.add),
         ),
       ],

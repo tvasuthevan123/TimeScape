@@ -41,7 +41,7 @@ class TaskTile extends StatefulWidget {
 
 class _TaskTileState extends State<TaskTile>
     with SingleTickerProviderStateMixin {
-  bool _isExpanded = false;
+  bool isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +64,7 @@ class _TaskTileState extends State<TaskTile>
         child: GestureDetector(
           onTap: () {
             setState(() {
-              _isExpanded = !_isExpanded;
+              isExpanded = !isExpanded;
             });
           },
           child: Stack(
@@ -72,7 +72,7 @@ class _TaskTileState extends State<TaskTile>
               Center(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
-                  height: _isExpanded ? 230 : 0,
+                  height: isExpanded ? 230 : 0,
                   width: screenWidth * 0.8,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10.0),
@@ -84,7 +84,7 @@ class _TaskTileState extends State<TaskTile>
                   ),
                   child: ClipRect(
                     child: OverflowBox(
-                      maxHeight: _isExpanded ? 230 : 0,
+                      maxHeight: isExpanded ? 230 : 0,
                       alignment: Alignment.topCenter,
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(16, 64, 16, 16),

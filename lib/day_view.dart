@@ -12,35 +12,35 @@ class DayView extends StatefulWidget {
 }
 
 class _DayViewState extends State<DayView> {
-  final ScrollController _scrollController = ScrollController();
-  double _overlayPosition = 0;
+  final ScrollController scrollController = ScrollController();
+  double overlayPosition = 0;
   List<Assignment> assignments = [];
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_handleScroll);
-    _loadData();
+    scrollController.addListener(handleScroll);
+    loadData();
   }
 
-  void _loadData() async {
+  void loadData() async {
     final itemManager = Provider.of<EntryManager>(context, listen: false);
     final eventsToday = await itemManager.getEventsToday();
     final freeTimeBlocks = await itemManager.getFreeTimeBlocksToday();
     setState(() {
-      assignments = scheduler(itemManager, freeTimeBlocks, 5, eventsToday);
+      assignments = scheduler(itemManager, freeTimeBlocks, 10, eventsToday);
     });
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_handleScroll);
+    scrollController.removeListener(handleScroll);
     super.dispose();
   }
 
-  void _handleScroll() {
+  void handleScroll() {
     setState(() {
-      _overlayPosition = -_scrollController.offset;
+      overlayPosition = -scrollController.offset;
     });
   }
 
@@ -74,7 +74,7 @@ class _DayViewState extends State<DayView> {
         child: Stack(
           children: [
             ListView.builder(
-              controller: _scrollController,
+              controller: scrollController,
               itemCount: 96,
               itemBuilder: (context, index) {
                 int hour = index ~/ 4;
@@ -148,7 +148,7 @@ class _DayViewState extends State<DayView> {
                   : const Color.fromARGB(255, 6, 35, 39);
 
               return Positioned(
-                top: _overlayPosition + top,
+                top: overlayPosition + top,
                 left: 80,
                 width: 300,
                 height: height,

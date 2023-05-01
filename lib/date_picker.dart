@@ -26,7 +26,7 @@ class _DateTimePickerState extends State<DateTimePicker> {
     selectedDateTime = DateTime.now().add(const Duration(minutes: 30));
   }
 
-  Future<void> _selectDate(BuildContext context) async {
+  Future<void> selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: selectedDateTime,
@@ -47,7 +47,7 @@ class _DateTimePickerState extends State<DateTimePicker> {
     }
   }
 
-  Future<void> _selectTime(BuildContext context) async {
+  Future<void> selectTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(selectedDateTime),
@@ -73,7 +73,7 @@ class _DateTimePickerState extends State<DateTimePicker> {
       children.add(
         InkWell(
           onTap: () {
-            _selectDate(context);
+            selectDate(context);
           },
           child: SizedBox(
             width: 150,
@@ -95,7 +95,7 @@ class _DateTimePickerState extends State<DateTimePicker> {
       children.add(
         InkWell(
           onTap: () {
-            _selectTime(context);
+            selectTime(context);
           },
           child: SizedBox(
             width: 150,

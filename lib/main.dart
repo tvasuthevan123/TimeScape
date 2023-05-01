@@ -39,23 +39,23 @@ class TimeScape extends StatefulWidget {
   TimeScape({Key? key, required this.itemManager}) : super(key: key);
 
   final EntryManager itemManager;
-  final _primaryColor = const Color.fromRGBO(0, 39, 41, 1);
-  final _secondaryColor = const Color.fromARGB(255, 11, 136, 143);
+  final primaryColor = const Color.fromRGBO(0, 39, 41, 1);
+  final secondaryColor = const Color.fromARGB(255, 11, 136, 143);
   @override
   State<TimeScape> createState() => _TimeScapeState();
 }
 
 class _TimeScapeState extends State<TimeScape> {
-  bool _isCategoriesSet = false;
+  bool isCategoriesSet = false;
 
   void setupCallback() {
-    setState(() => _isCategoriesSet = true);
+    setState(() => isCategoriesSet = true);
   }
 
   @override
   Widget build(BuildContext context) {
     if (widget.itemManager.categories.isNotEmpty) {
-      setState(() => _isCategoriesSet = true);
+      setState(() => isCategoriesSet = true);
     }
     return ChangeNotifierProvider<EntryManager>.value(
       value: widget.itemManager,
@@ -65,34 +65,26 @@ class _TimeScapeState extends State<TimeScape> {
         theme: ThemeData(
           textTheme: GoogleFonts.lexendDecaTextTheme(),
           primarySwatch: MaterialColor(
-            widget._primaryColor.value,
+            widget.primaryColor.value,
             <int, Color>{
-              50: Color.lerp(
-                  widget._primaryColor, widget._secondaryColor, 0.1)!,
-              100: Color.lerp(
-                  widget._primaryColor, widget._secondaryColor, 0.2)!,
-              200: Color.lerp(
-                  widget._primaryColor, widget._secondaryColor, 0.3)!,
-              300: Color.lerp(
-                  widget._primaryColor, widget._secondaryColor, 0.4)!,
-              400: Color.lerp(
-                  widget._primaryColor, widget._secondaryColor, 0.5)!,
-              500: Color.lerp(
-                  widget._primaryColor, widget._secondaryColor, 0.6)!,
-              600: Color.lerp(
-                  widget._primaryColor, widget._secondaryColor, 0.7)!,
-              700: Color.lerp(
-                  widget._primaryColor, widget._secondaryColor, 0.8)!,
-              800: Color.lerp(
-                  widget._primaryColor, widget._secondaryColor, 0.9)!,
-              900: Color.lerp(
-                  widget._primaryColor, widget._secondaryColor, 1.0)!,
+              50: Color.lerp(widget.primaryColor, widget.secondaryColor, 0.1)!,
+              100: Color.lerp(widget.primaryColor, widget.secondaryColor, 0.2)!,
+              200: Color.lerp(widget.primaryColor, widget.secondaryColor, 0.3)!,
+              300: Color.lerp(widget.primaryColor, widget.secondaryColor, 0.4)!,
+              400: Color.lerp(widget.primaryColor, widget.secondaryColor, 0.5)!,
+              500: Color.lerp(widget.primaryColor, widget.secondaryColor, 0.6)!,
+              600: Color.lerp(widget.primaryColor, widget.secondaryColor, 0.7)!,
+              700: Color.lerp(widget.primaryColor, widget.secondaryColor, 0.8)!,
+              800: Color.lerp(widget.primaryColor, widget.secondaryColor, 0.9)!,
+              900: Color.lerp(widget.primaryColor, widget.secondaryColor, 1.0)!,
             },
           ),
           primaryColor: const Color.fromARGB(255, 235, 254, 255),
           platform: TargetPlatform.android,
         ),
-        home: _isCategoriesSet ? const MainApp() : SettingsPage(setupCallback),
+        home: isCategoriesSet
+            ? const MainApp()
+            : SettingsPage(setupCompleteCallback: setupCallback),
       ),
     );
   }
@@ -106,14 +98,14 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
-  bool _isShowing = false;
-  late final AnimationController _controller;
+  bool isShowing = false;
+  late final AnimationController controller;
   late TabController tabController;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
@@ -149,7 +141,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                         child: AnimatedPadding(
                           duration: const Duration(milliseconds: 400),
                           padding: EdgeInsets.only(
-                            top: _isShowing ? 40 + buttonHeight : 40,
+                            top: isShowing ? 40 + buttonHeight : 40,
                           ),
                           child: const EntryListView(
                             entryType: EntryType.task,
@@ -160,7 +152,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                         child: AnimatedPadding(
                           duration: const Duration(milliseconds: 400),
                           padding: EdgeInsets.only(
-                            top: _isShowing ? 40 + buttonHeight : 40,
+                            top: isShowing ? 40 + buttonHeight : 40,
                           ),
                           child: const EntryListView(
                             entryType: EntryType.reminder,
@@ -171,7 +163,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                         child: AnimatedPadding(
                           duration: const Duration(milliseconds: 400),
                           padding: EdgeInsets.only(
-                            top: _isShowing ? 40 + buttonHeight : 40,
+                            top: isShowing ? 40 + buttonHeight : 40,
                           ),
                           child: const EntryListView(
                             entryType: EntryType.event,
@@ -182,7 +174,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                         child: AnimatedPadding(
                           duration: const Duration(milliseconds: 400),
                           padding: EdgeInsets.only(
-                            top: _isShowing ? 40 + buttonHeight : 40,
+                            top: isShowing ? 40 + buttonHeight : 40,
                           ),
                           child: DayView(),
                         ),
@@ -191,7 +183,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                         child: AnimatedPadding(
                           duration: const Duration(milliseconds: 400),
                           padding: EdgeInsets.only(
-                            top: _isShowing ? 40 + buttonHeight : 40,
+                            top: isShowing ? 40 + buttonHeight : 40,
                           ),
                           child: EisenhowerMatrix(),
                         ),
@@ -200,11 +192,11 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                         child: AnimatedPadding(
                           duration: const Duration(milliseconds: 400),
                           padding: EdgeInsets.only(
-                            top: _isShowing ? 40 + buttonHeight : 40,
+                            top: isShowing ? 40 + buttonHeight : 40,
                           ),
                           child: Column(children: [
                             Expanded(
-                              child: SettingsPage(() {}),
+                              child: SettingsPage(setupCompleteCallback: () {}),
                             ),
                             Padding(
                               padding: const EdgeInsets.only(bottom: 10),
@@ -226,7 +218,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
               duration: const Duration(milliseconds: 400),
               left: maxWidth * 0.4,
               right: maxWidth * 0.4,
-              top: _isShowing ? buttonHeight : 0,
+              top: isShowing ? buttonHeight : 0,
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -244,7 +236,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                 ),
                 onPressed: () {
                   setState(() {
-                    _isShowing = !_isShowing;
+                    isShowing = !isShowing;
                   });
                 },
                 child: const Icon(
@@ -253,8 +245,8 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
               ),
             ),
             SlidingAppBar(
-              controller: _controller,
-              visible: _isShowing,
+              controller: controller,
+              visible: isShowing,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: TimeScapeTabBar(

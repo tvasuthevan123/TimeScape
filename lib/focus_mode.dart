@@ -14,33 +14,32 @@ class FocusMode extends StatefulWidget {
 }
 
 class _FocusModeState extends State<FocusMode> {
-  int _secondsElapsed = 0;
-  Timer? _timer;
+  int secondsElapsed = 0;
+  Timer? timer;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
-        _secondsElapsed++;
-        widget.task.timeSpent =
-            Duration(seconds: widget.task.timeSpent.inSeconds + 1);
+        secondsElapsed++;
+        widget.task.incrementTimeSpent();
       });
     });
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    timer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    int hours = _secondsElapsed ~/ 3600;
-    int minutes = _secondsElapsed ~/ 60;
-    int seconds = _secondsElapsed % 60;
+    int hours = secondsElapsed ~/ 3600;
+    int minutes = secondsElapsed ~/ 60;
+    int seconds = secondsElapsed % 60;
     return Consumer<EntryManager>(
       builder: (context, itemManager, child) {
         return SafeArea(

@@ -26,7 +26,7 @@ class DatabaseHelper {
     } catch (e) {
       print(e);
     }
-    _database = await _initDatabase();
+    _database = await initDatabase();
   }
 
   Future<Database> get database async {
@@ -37,11 +37,11 @@ class DatabaseHelper {
       return _database!;
     }
 
-    _database = await _initDatabase();
+    _database = await initDatabase();
     return _database!;
   }
 
-  Future<Database> _initDatabase() async {
+  Future<Database> initDatabase() async {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, dbName);
     print("Init Database $path");
@@ -58,7 +58,6 @@ class DatabaseHelper {
             'deadline INTEGER, '
             'time_spent INTEGER, '
             'estimated_length INTEGER, '
-            'urgency REAL, '
             'category int, '
             'FOREIGN KEY(category) REFERENCES category(id)'
             ')');
@@ -236,7 +235,7 @@ class DatabaseHelper {
     final today = DateTime.now();
     final todayStart =
         DateTime(today.year, today.month, today.day).millisecondsSinceEpoch;
-    final todayEnd = todayStart + Duration(days: 1).inMilliseconds - 1;
+    final todayEnd = todayStart + const Duration(days: 1).inMilliseconds - 1;
 
     final db = await database;
     final results = await db.rawQuery('''
@@ -256,26 +255,4 @@ class DatabaseHelper {
 
     return results.map((result) => result['id'] as String).toList();
   }
-
-  // Future<List<Assignment>> getAssignments() async {
-  //   final db = await database;
-  //   final maps = await db.query('assignments');
-
-  //   return List.generate(maps.length, (i) {
-  //     return Assignment.fromMap(maps[i]);
-  //   });
-  // }
-
-  // Future<int> updateAssignment(Assignment item) async {
-  //   final db = await database;
-
-  //   return db.update('assignments', item.toMap(),
-  //       where: 'id = ?', whereArgs: [item.id]);
-  // }
-
-  // Future<int> deleteAssignment(Assignment item) async {
-  //   final db = await database;
-
-  //   return db.delete('assignments', where: 'id = ?', whereArgs: [item.id]);
-  // }
 }

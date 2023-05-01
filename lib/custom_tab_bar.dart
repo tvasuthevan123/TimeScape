@@ -23,8 +23,7 @@ class TimeScapeTabBar extends StatelessWidget {
         controller: tabController,
         onTap: tabChoiceCallback,
         indicatorSize: TabBarIndicatorSize.label,
-        labelColor: theme.primaryColorLight, // Selected icon color
-        // unselectedLabelColor: theme.primaryColor,
+        labelColor: theme.primaryColorLight,
         tabs: const <Widget>[
           Tab(
             child: SizedBox(

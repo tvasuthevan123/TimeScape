@@ -19,29 +19,29 @@ class ToggleButtonSelection extends StatefulWidget {
 }
 
 class _ToggleButtonSelectionState extends State<ToggleButtonSelection> {
-  late List<bool> _isSelectedList = [];
+  late List<bool> isSelectedList = [];
 
   @override
   void initState() {
     super.initState();
-    _isSelectedList =
+    isSelectedList =
         List.generate(widget.buttonLabels.length, (index) => index == 0);
   }
 
-  void _onPressed(int index) {
+  void onPressed(int index) {
     setState(() {
       if (!widget.allowMultipleSelection) {
-        _isSelectedList =
+        isSelectedList =
             List.generate(widget.buttonLabels.length, (i) => i == index);
       } else {
-        _isSelectedList[index] = !_isSelectedList[index];
+        isSelectedList[index] = !isSelectedList[index];
       }
     });
 
     if (widget.onPressCallback != null) {
       final selectedIndices = <int>[];
-      for (var i = 0; i < _isSelectedList.length; i++) {
-        if (_isSelectedList[i]) {
+      for (var i = 0; i < isSelectedList.length; i++) {
+        if (isSelectedList[i]) {
           selectedIndices.add(i);
         }
       }
@@ -52,7 +52,7 @@ class _ToggleButtonSelectionState extends State<ToggleButtonSelection> {
   @override
   Widget build(BuildContext context) {
     return ToggleButtons(
-      isSelected: _isSelectedList,
+      isSelected: isSelectedList,
       selectedColor: Colors.white,
       color: Colors.blue,
       fillColor: Colors.lightBlue.shade900,
@@ -64,7 +64,7 @@ class _ToggleButtonSelectionState extends State<ToggleButtonSelection> {
       borderWidth: 1.5,
       borderRadius: BorderRadius.circular(10),
       selectedBorderColor: Colors.pink,
-      onPressed: _onPressed,
+      onPressed: onPressed,
       children: widget.buttonLabels
           .map((label) => Padding(
                 padding: const EdgeInsets.all(3),
