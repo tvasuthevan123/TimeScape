@@ -6,7 +6,6 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:timescape/notification_service.dart';
-import 'package:timescape/scheduler.dart';
 import 'package:timescape/entry_manager.dart';
 import 'package:timescape/category_setup.dart';
 import 'package:timezone/timezone.dart';
@@ -69,7 +68,6 @@ class DatabaseHelper {
             'startTime STRING, '
             'startDate INTEGER, '
             'length INTEGER, '
-            'reminderTimeBeforeEvent INTEGER, '
             'recurrenceType STRING, '
             'daysOfWeek STRING, '
             'dayOfMonth INTEGER, '
@@ -120,7 +118,7 @@ class DatabaseHelper {
     print(reminder.dateTime);
     NotificationService().flutterLocalNotificationsPlugin.zonedSchedule(
         reminder.id.hashCode,
-        "TimeScape Reminder: ",
+        "TimeScape Reminder",
         reminder.title,
         TZDateTime.from(reminder.dateTime, local),
         uiLocalNotificationDateInterpretation:
@@ -178,6 +176,10 @@ class DatabaseHelper {
   Future<int> deleteReminder(Reminder item) async {
     final db = await database;
 
+    NotificationService()
+        .flutterLocalNotificationsPlugin
+        .cancel(item.id.hashCode);
+
     return db.delete('reminders', where: 'id = ?', whereArgs: [item.id]);
   }
 
@@ -216,7 +218,7 @@ class DatabaseHelper {
   Future<int> deleteCategory(TaskCategory category) async {
     final db = await database;
 
-    return db.delete('events', where: 'id = ?', whereArgs: [category.id]);
+    return db.delete('categories', where: 'id = ?', whereArgs: [category.id]);
   }
 
   Future<int> deleteEntry(Entry entry) async {

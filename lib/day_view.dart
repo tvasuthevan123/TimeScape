@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timescape/database_helper.dart';
 import 'package:timescape/entry_manager.dart';
-import 'package:timescape/scheduler.dart';
 
 class DayView extends StatefulWidget {
   @override
@@ -25,10 +24,9 @@ class _DayViewState extends State<DayView> {
 
   void loadData() async {
     final itemManager = Provider.of<EntryManager>(context, listen: false);
-    final eventsToday = await itemManager.getEventsToday();
-    final freeTimeBlocks = await itemManager.getFreeTimeBlocksToday();
+    List<Assignment> newAssignments = await itemManager.scheduler(10);
     setState(() {
-      assignments = scheduler(itemManager, freeTimeBlocks, 10, eventsToday);
+      assignments = newAssignments;
     });
   }
 
@@ -63,12 +61,9 @@ class _DayViewState extends State<DayView> {
       return RefreshIndicator(
         onRefresh: () async {
           print("Refreshed");
-          final List<Event> eventsToday = await itemManager.getEventsToday();
-          List<TimeBlock> freeTimeBlocks =
-              await itemManager.getFreeTimeBlocksToday();
+          List<Assignment> newAssignments = await itemManager.scheduler(10);
           setState(() {
-            assignments =
-                scheduler(itemManager, freeTimeBlocks, 5, eventsToday);
+            assignments = newAssignments;
           });
         },
         child: Stack(

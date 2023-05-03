@@ -54,10 +54,10 @@ class EisenhowerMatrix extends StatelessWidget {
           String itemId = allTasks[index][0];
           String colorCode = allTasks[index][2];
           TaskTileColors color = TaskTileColors(
-            tileColor: Colors.red.shade900,
-            tileBorderColor: Colors.red.shade800,
-            innerTileColor: Colors.red.shade100,
-            innerTileFontColor: Colors.red.shade900,
+            tileColor: Colors.purple.shade900,
+            tileBorderColor: Colors.purple.shade800,
+            innerTileColor: Colors.purple.shade100,
+            innerTileFontColor: Colors.purple.shade900,
           );
 
           switch (colorCode) {
@@ -70,11 +70,11 @@ class EisenhowerMatrix extends StatelessWidget {
               );
               break;
             case 'UrgentNotImportant':
-              color = TaskTileColors(
-                tileColor: Colors.orange.shade900,
-                tileBorderColor: Colors.orange.shade800,
-                innerTileColor: Colors.orange.shade100,
-                innerTileFontColor: Colors.orange.shade900,
+              color = const TaskTileColors(
+                tileColor: Color.fromARGB(255, 50, 11, 30),
+                tileBorderColor: Color.fromARGB(255, 49, 5, 27),
+                innerTileColor: Color.fromARGB(255, 133, 78, 104),
+                innerTileFontColor: Color.fromARGB(255, 12, 1, 6),
               );
               break;
             case 'NotUrgentNotImportant':

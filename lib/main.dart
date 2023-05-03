@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:timescape/category_setup.dart';
 import 'package:timescape/database_helper.dart';
 import 'package:timescape/eisenhower_display.dart';
@@ -12,10 +11,9 @@ import 'package:timescape/entry_form.dart';
 import 'package:timescape/entry_manager.dart';
 import 'package:timescape/list_view.dart';
 import 'package:timescape/notification_service.dart';
-import 'package:timescape/scheduler.dart';
-import './sliding_app_bar.dart';
-import './custom_tab_bar.dart';
-import './day_view.dart';
+import 'package:timescape/sliding_app_bar.dart';
+import 'package:timescape/custom_tab_bar.dart';
+import 'package:timescape/day_view.dart';
 
 const double buttonHeight = 50;
 
@@ -24,12 +22,11 @@ void main() async {
     const SystemUiOverlayStyle(
         statusBarColor: Color.fromARGB(255, 235, 254, 255)),
   );
-  // Initialize the database.
 
+  // Initialise persistence and notification helper instances
   WidgetsFlutterBinding.ensureInitialized();
   await (DatabaseHelper().database);
   await NotificationService().initNotificationsPlugin();
-  // Create an instance of the EntryManager and load items from the database.
   final itemManager = EntryManager();
   await itemManager.loadPersistentDate();
   runApp(TimeScape(itemManager: itemManager));

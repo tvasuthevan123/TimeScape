@@ -72,7 +72,7 @@ class _TaskTileState extends State<TaskTile>
               Center(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
-                  height: isExpanded ? 230 : 0,
+                  height: isExpanded ? 240 : 0,
                   width: screenWidth * 0.8,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10.0),
@@ -96,11 +96,8 @@ class _TaskTileState extends State<TaskTile>
               ),
               Slidable(
                 startActionPane: ActionPane(
-                  // A motion is a widget used to control how the pane animates.
                   motion: const BehindMotion(),
-                  // All actions are defined in the children parameter.
                   children: [
-                    // A SlidableAction can have an icon and/or a label.
                     SlidableAction(
                       onPressed: (BuildContext context) async {
                         entryManager.removeEntry(widget.item.id);
@@ -162,7 +159,7 @@ class _TaskTileState extends State<TaskTile>
   }
 
   Widget entryInfoWidget(List<String> info) {
-    return Column(
+    return ListView(
         children: info.fold(
       [],
       (previousValue, element) =>

@@ -145,10 +145,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     itemBuilder: (context, index) {
                       return Dismissible(
                         key: Key(itemManager.categories[index].name),
-                        onDismissed: (direction) {
-                          setState(() async {
-                            await DatabaseHelper()
-                                .deleteCategory(itemManager.categories[index]);
+                        onDismissed: (direction) async {
+                          await DatabaseHelper()
+                              .deleteCategory(itemManager.categories[index]);
+                          setState(() {
                             itemManager.categories.removeAt(index);
                           });
                         },
@@ -158,7 +158,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               'Importance: ${itemManager.categories[index].value}'),
                           trailing: IconButton(
                             icon: const Icon(Icons.delete),
-                            onPressed: () {
+                            onPressed: () async {
+                              await DatabaseHelper().deleteCategory(
+                                  itemManager.categories[index]);
                               setState(() {
                                 itemManager.categories.removeAt(index);
                               });

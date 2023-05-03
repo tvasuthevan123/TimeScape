@@ -113,6 +113,7 @@ class _EntryFormState extends State<EntryForm> {
                         );
                         await DatabaseHelper().addTask(entry as Task);
                       } else if (entryType == EntryType.event) {
+                        print("DateTIME $dateTime");
                         entry = Event(
                           title: entryTitle,
                           description: entryDescription,
@@ -120,7 +121,6 @@ class _EntryFormState extends State<EntryForm> {
                           startTime: TimeOfDay(
                               hour: dateTime.hour, minute: dateTime.minute),
                           startDate: dateTime,
-                          reminderTimeBeforeEvent: timeBeforeEventReminder,
                           recurrence: Recurrence(
                             type: recurrenceType,
                             daysOfWeek: chosenDays,
@@ -245,6 +245,7 @@ class _EntryFormState extends State<EntryForm> {
             onDateTimeChanged: (DateTime newDate) {
               setState(() {
                 dateTime = newDate;
+                print("DT $dateTime");
               });
             },
           ),
@@ -261,21 +262,6 @@ class _EntryFormState extends State<EntryForm> {
             onDurationChanged: (Duration newDuration) {
               setState(() {
                 length = newDuration;
-              });
-            },
-          ),
-        ],
-      );
-    }
-
-    Widget renderTimeBeforeAlert() {
-      return Column(
-        children: [
-          DurationPicker(
-            initialDuration: length,
-            onDurationChanged: (Duration newDuration) {
-              setState(() {
-                timeBeforeEventReminder = newDuration;
               });
             },
           ),
@@ -332,14 +318,6 @@ class _EntryFormState extends State<EntryForm> {
 
     return Column(
       children: [
-        const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Text("Alert Time before Event",
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-              )),
-        ),
-        renderTimeBeforeAlert(),
         const SizedBox(height: 16),
         ToggleButtonSelection(
           buttonLabels: const [
