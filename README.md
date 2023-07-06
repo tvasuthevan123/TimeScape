@@ -1,4 +1,4 @@
-# TimesScape
+# TimeScape
 
 TimeScape is a cross-platform application (developed for my third year individual project for a Computer Science BSc Hons at the University of Southampton) meant to provide a minimal time-management solution for students that currently isn't available on the mobile phone market.
 
