@@ -4,12 +4,14 @@ import 'package:timescape/entry_manager.dart';
 import 'package:timescape/task_tile.dart';
 
 class EisenhowerMatrix extends StatelessWidget {
-  final List<String> quadrantNames = [
+  static List<String> quadrantNames = [
     'Urgent & Important',
     'Not Urgent & Important',
     'Urgent & Not Important',
     'Not Urgent & Not Important'
   ];
+
+  const EisenhowerMatrix({super.key});
 
   Widget buildTaskTile(BuildContext context, Task item, TaskTileColors colors) {
     return TaskTile(item: item, colors: colors);
@@ -18,8 +20,7 @@ class EisenhowerMatrix extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<EntryManager>(builder: (context, itemManager, child) {
-      List<List<String>> classifiedTasks =
-          itemManager.classifyTasksIntoQuadrants();
+      List<List<String>> classifiedTasks = itemManager.classifyTasksIntoQuadrants();
       List<List<String>> allTasks = [];
 
       for (int i = 0; i < classifiedTasks.length; i++) {

@@ -25,7 +25,7 @@ class TaskTile extends StatefulWidget {
   final TaskTileColors colors;
 
   const TaskTile({
-    Key? key,
+    super.key,
     required this.item,
     this.colors = const TaskTileColors(
       tileColor: Color.fromRGBO(0, 78, 82, 1),
@@ -33,7 +33,7 @@ class TaskTile extends StatefulWidget {
       innerTileColor: Color.fromRGBO(214, 253, 255, 1),
       innerTileFontColor: Color.fromRGBO(0, 58, 61, 1),
     ),
-  }) : super(key: key);
+  });
 
   @override
   State<TaskTile> createState() => _TaskTileState();

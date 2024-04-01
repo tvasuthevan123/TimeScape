@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SlidingAppBar extends StatelessWidget {
-  SlidingAppBar({
+  const SlidingAppBar({super.key, 
     required this.child,
     required this.controller,
     required this.visible,

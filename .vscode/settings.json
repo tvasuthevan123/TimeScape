@@ -1,0 +1,9 @@
+{
+    "editor.foldingHighlight": false,
+    "dart.lineLength": 100,
+    "editor.rulers": [
+        500
+    ],
+    "cmake.sourceDirectory": "D:/Soton/Computer Science Soton/Year 3/COMP3200/TimeScape/linux",
+    "java.configuration.updateBuildConfiguration": "interactive"
+}

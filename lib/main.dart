@@ -33,7 +33,7 @@ void main() async {
 }
 
 class TimeScape extends StatefulWidget {
-  TimeScape({Key? key, required this.itemManager}) : super(key: key);
+  const TimeScape({super.key, required this.itemManager});
 
   final EntryManager itemManager;
   final primaryColor = const Color.fromRGBO(0, 39, 41, 1);
@@ -88,7 +88,7 @@ class _TimeScapeState extends State<TimeScape> {
 }
 
 class MainApp extends StatefulWidget {
-  const MainApp({Key? key}) : super(key: key);
+  const MainApp({super.key});
 
   @override
   State<MainApp> createState() => _MainAppState();
@@ -173,7 +173,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                           padding: EdgeInsets.only(
                             top: isShowing ? 40 + buttonHeight : 40,
                           ),
-                          child: DayView(),
+                          child: const DayView(),
                         ),
                       ),
                       Center(
@@ -182,7 +182,7 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
                           padding: EdgeInsets.only(
                             top: isShowing ? 40 + buttonHeight : 40,
                           ),
-                          child: EisenhowerMatrix(),
+                          child: const EisenhowerMatrix(),
                         ),
                       ),
                       Center(

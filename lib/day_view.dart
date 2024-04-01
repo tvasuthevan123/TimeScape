@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:timescape/database_helper.dart';
 import 'package:timescape/entry_manager.dart';
 
 class DayView extends StatefulWidget {
+  const DayView({super.key});
+
   @override
   State<DayView> createState() => _DayViewState();
 }
@@ -222,7 +222,7 @@ class _DayViewState extends State<DayView> {
                   ),
                 ),
               );
-            }).toList()
+            })
           ],
         ),
       );

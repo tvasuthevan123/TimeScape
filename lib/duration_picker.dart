@@ -5,10 +5,10 @@ class DurationPicker extends StatefulWidget {
   final void Function(Duration duration) onDurationChanged;
 
   const DurationPicker({
-    Key? key,
+    super.key,
     required this.initialDuration,
     required this.onDurationChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<DurationPicker> createState() => _DurationPickerState();

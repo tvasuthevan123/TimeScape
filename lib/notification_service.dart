@@ -4,8 +4,8 @@ import 'package:timescape/entry_manager.dart';
 import 'package:timezone/data/latest.dart';
 
 class NotificationService {
-  static final FlutterLocalNotificationsPlugin
-      _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  static final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   FlutterLocalNotificationsPlugin get flutterLocalNotificationsPlugin =>
       _flutterLocalNotificationsPlugin;
@@ -15,8 +15,7 @@ class NotificationService {
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('app_icon');
-    const InitializationSettings initializationSettings =
-        InitializationSettings(
+    const InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
     );
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
@@ -35,9 +34,7 @@ class NotificationService {
         const Color.fromRGBO(0, 78, 82, 1);
         break;
     }
-    ;
-    AndroidNotificationDetails androidNotificationDetails =
-        AndroidNotificationDetails(
+    AndroidNotificationDetails androidNotificationDetails = AndroidNotificationDetails(
       'channel id',
       'channel name',
       groupKey: 'com.example.timescape',

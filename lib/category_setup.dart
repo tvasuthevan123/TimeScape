@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timescape/database_helper.dart';
-import 'package:timescape/date_picker.dart';
 import 'package:timescape/entry_manager.dart';
 
 class SettingsPage extends StatefulWidget {
   final VoidCallback setupCompleteCallback;
 
-  const SettingsPage({Key? key, required this.setupCompleteCallback})
-      : super(key: key);
+  const SettingsPage({super.key, required this.setupCompleteCallback});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();

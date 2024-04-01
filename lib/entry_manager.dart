@@ -1,7 +1,5 @@
 import 'dart:collection';
 import 'dart:math';
-import 'package:intl/intl.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timescape/database_helper.dart';
@@ -14,8 +12,7 @@ class EntryManager extends ChangeNotifier {
   TimeOfDay endWorkTime = const TimeOfDay(hour: 17, minute: 0);
   final Map<String, Entry> _entries = {};
   final List<TaskCategory> categories = [];
-  UnmodifiableMapView<String, Entry> get entries =>
-      UnmodifiableMapView<String, Entry>(_entries);
+  UnmodifiableMapView<String, Entry> get entries => UnmodifiableMapView<String, Entry>(_entries);
 
   EntryManager({Key? key});
 
@@ -65,11 +62,163 @@ class EntryManager extends ChangeNotifier {
   }
 
   double lengthToDeadlineRatio(Task task) {
-    int timeTillDeadline =
-        task.deadline.difference(DateTime.now()).inMinutes > 0
-            ? task.deadline.difference(DateTime.now()).inMinutes
-            : 1;
+    int timeTillDeadline = task.deadline.difference(DateTime.now()).inMinutes > 0
+        ? task.deadline.difference(DateTime.now()).inMinutes
+        : 1;
     return task.estimatedLength.inMinutes / timeTillDeadline;
+  }
+
+  Future<List<TimeBlock>> getFreeTimeBlocksToday() async {
+    final List<Event> eventsToday = await getEventsToday();
+    final List<TimeBlock> timeBlocks = [];
+
+    DateTime workStartTime = DateTime(1, 1, 1, startWorkTime.hour, startWorkTime.minute);
+    DateTime workEndTime = DateTime(1, 1, 1, endWorkTime.hour, endWorkTime.minute);
+
+    print("Start Time $workStartTime");
+    print("End Time $workEndTime");
+
+    // Sort events by start time
+    eventsToday.sort((a, b) => DateTime(1, 1, 1, a.startTime.hour, a.startTime.minute)
+        .compareTo(DateTime(1, 1, 1, b.startTime.hour, b.startTime.minute)));
+
+    if (eventsToday.isNotEmpty) {
+      print("Break1");
+      Event firstEvent = eventsToday.first;
+      DateTime eventStartTime =
+          DateTime(1, 1, 1, firstEvent.startTime.hour, firstEvent.startTime.minute);
+      if (eventStartTime.isAfter(workStartTime)) {
+        print("Break2");
+        timeBlocks.add(
+            TimeBlock(time: workStartTime, duration: eventStartTime.difference(workStartTime)));
+      }
+    } else {
+      print("Break3");
+      timeBlocks
+          .add(TimeBlock(time: workStartTime, duration: workEndTime.difference(workStartTime)));
+    }
+
+    // Iterate through event list to check free time between events
+    for (int i = 0; i < eventsToday.length; i++) {
+      print("Break1");
+
+      Event currentEvent = eventsToday[i];
+      DateTime currentEventStartTime =
+          DateTime(1, 1, 1, currentEvent.startTime.hour, currentEvent.startTime.minute);
+      DateTime currentEventEndTime = currentEventStartTime.add(currentEvent.length);
+
+      if (currentEventEndTime.isAfter(DateTime(1, 1, 1, 24))) {
+        currentEventEndTime = DateTime(1, 1, 1, 24);
+      }
+
+      print("Break2");
+      // Check if time between the current event and next (or end of day, whichever is closer)
+      if (i < eventsToday.length - 1) {
+        Event nextEvent = eventsToday[i + 1];
+        DateTime nextEventStartTime =
+            DateTime(1, 1, 1, nextEvent.startTime.hour, nextEvent.startTime.minute);
+        if (nextEventStartTime.isAfter(currentEventEndTime)) {
+          if (nextEventStartTime.isBefore(workEndTime)) {
+            if (currentEventEndTime.isBefore(workStartTime)) {
+              timeBlocks.add(TimeBlock(
+                  time: workStartTime, duration: nextEventStartTime.difference(workStartTime)));
+            } else {
+              timeBlocks.add(TimeBlock(
+                  time: currentEventEndTime,
+                  duration: nextEventStartTime.difference(currentEventEndTime)));
+            }
+          } else {
+            timeBlocks.add(TimeBlock(
+                time: currentEventEndTime, duration: workEndTime.difference(currentEventEndTime)));
+          }
+        }
+      } else if (currentEventEndTime.isBefore(workEndTime)) {
+        if (currentEventEndTime.isBefore(workStartTime)) {
+          timeBlocks
+              .add(TimeBlock(time: workStartTime, duration: workEndTime.difference(workStartTime)));
+        } else {
+          timeBlocks.add(TimeBlock(
+              time: currentEventEndTime, duration: workEndTime.difference(currentEventEndTime)));
+        }
+      }
+    }
+
+    return timeBlocks;
+  }
+
+  int timeAvailable(Duration unassignedDuration, Duration unallocatedTime) {
+    if (unassignedDuration <= unallocatedTime) {
+      return 0;
+    } else if (unassignedDuration >= unallocatedTime) {
+      return 1;
+    } else {
+      return -1;
+    }
+  }
+
+  Future<List<Assignment>> scheduler(int breakTime) async {
+    List<Event> events = await getEventsToday();
+    List<TimeBlock> timeBlocks = await getFreeTimeBlocksToday();
+    List<String> prioritisedItemIDs =
+        classifyTasksIntoQuadrants().fold([], (previousValue, element) => previousValue + element);
+
+    for (var element in timeBlocks) {
+      print("Timeblock Time - ${element.time} - Duration - ${element.duration}");
+    }
+    for (String itemID in prioritisedItemIDs) {
+      Task item = entries[itemID]! as Task;
+      Duration unassignedDuration =
+          item.estimatedLength.inMinutes <= 0 ? Duration.zero : item.estimatedLength;
+      for (TimeBlock block in timeBlocks) {
+        Duration allocatedTime = block.assignments.fold(
+          Duration.zero,
+          (previousValue, element) =>
+              previousValue + element.duration + Duration(minutes: breakTime),
+        );
+
+        Duration unallocTime = (block.duration - allocatedTime).inMinutes <= 0
+            ? Duration.zero
+            : block.duration - allocatedTime;
+        int availability = timeAvailable(unassignedDuration, unallocTime);
+        if (availability == 0) {
+          block.assignments.add(Assignment(
+            time: block.time.add(allocatedTime),
+            itemID: itemID,
+            duration: unassignedDuration,
+          ));
+          unassignedDuration = Duration.zero;
+        } else if (availability == 1) {
+          block.assignments.add(Assignment(
+            time: block.time.add(allocatedTime),
+            itemID: itemID,
+            duration: unallocTime,
+          ));
+          unassignedDuration -= unallocTime;
+          // block.duration -= const Duration(minutes: 30);
+        }
+
+        if (unassignedDuration.inMinutes == 0) {
+          break;
+        }
+      }
+    }
+
+    List<Assignment> assignments = timeBlocks.fold<List<Assignment>>(
+      [],
+      (acc, timeBlock) {
+        return acc + timeBlock.assignments;
+      },
+    );
+    assignments += events
+        .map(
+          (e) => Assignment(
+              time: DateTime(1, 1, 1, e.startTime.hour, e.startTime.minute),
+              itemID: e.id,
+              duration: e.length),
+        )
+        .toList();
+
+    return assignments;
   }
 
   /* 
@@ -82,8 +231,7 @@ class EntryManager extends ChangeNotifier {
 
     // Do not try to sort into quadrants without enough data points, instead sort by length to deadline ratio
     if (taskList.length < 10) {
-      taskList.sort((a, b) =>
-          lengthToDeadlineRatio(a).compareTo(lengthToDeadlineRatio(b)));
+      taskList.sort((a, b) => lengthToDeadlineRatio(b).compareTo(lengthToDeadlineRatio(a)));
       return [taskList.map((item) => item.id).toList(), [], [], []];
     }
 
@@ -96,29 +244,22 @@ class EntryManager extends ChangeNotifier {
 
     // Calculate max importance value to allow for min-max normalization
     List<double> importanceVals = taskList
-        .map((e) => categories
-            .firstWhere((category) => e.categoryID == category.id)
-            .value
-            .toDouble())
+        .map((e) =>
+            categories.firstWhere((category) => e.categoryID == category.id).value.toDouble())
         .toList();
 
-    double maxImportance = importanceVals.fold(
-        0, (prev, current) => current > prev ? current : prev);
+    double maxImportance =
+        importanceVals.fold(0, (prev, current) => current > prev ? current : prev);
 
     // Generate normalized feature values for each task, and enter into map
     Map<String, List<double>> itemFeatures = {};
     for (Task item in taskList) {
-      int timeTillDeadline =
-          item.deadline.difference(DateTime.now()).inMinutes > 0
-              ? item.deadline.difference(DateTime.now()).inMinutes
-              : 1;
-      double lengthToDeadlineRatio =
-          item.estimatedLength.inMinutes / timeTillDeadline;
+      int timeTillDeadline = item.deadline.difference(DateTime.now()).inMinutes > 0
+          ? item.deadline.difference(DateTime.now()).inMinutes
+          : 1;
+      double lengthToDeadlineRatio = item.estimatedLength.inMinutes / timeTillDeadline;
       double normalizedImportance = minMaxNormalization(
-          categories
-              .firstWhere((category) => item.categoryID == category.id)
-              .value
-              .toDouble(),
+          categories.firstWhere((category) => item.categoryID == category.id).value.toDouble(),
           0,
           maxImportance);
 
@@ -134,16 +275,12 @@ class EntryManager extends ChangeNotifier {
     List<List<double>> itemFeatureList = itemFeatures.values.toList();
 
     itemFeatureList.sort((a, b) => a[0].compareTo(b[0]));
-    double lengthToDeadlineRatioP25 =
-        itemFeatureList[(itemFeatureList.length * 0.25).floor()][0];
-    double lengthToDeadlineRatioP75 =
-        itemFeatureList[(itemFeatureList.length * 0.75).floor()][0];
+    double lengthToDeadlineRatioP25 = itemFeatureList[(itemFeatureList.length * 0.25).floor()][0];
+    double lengthToDeadlineRatioP75 = itemFeatureList[(itemFeatureList.length * 0.75).floor()][0];
 
     itemFeatureList.sort((a, b) => a[1].compareTo(b[1]));
-    double importanceP25 =
-        itemFeatureList[(itemFeatureList.length * 0.25).floor()][1];
-    double importanceP75 =
-        itemFeatureList[(itemFeatureList.length * 0.75).floor()][1];
+    double importanceP25 = itemFeatureList[(itemFeatureList.length * 0.25).floor()][1];
+    double importanceP75 = itemFeatureList[(itemFeatureList.length * 0.75).floor()][1];
 
     // print("ImportanceP25 ${importanceP25} ImportanceP75 ${importanceP75}");
 
@@ -198,10 +335,13 @@ class EntryManager extends ChangeNotifier {
       quadrant.sort((a, b) {
         final taskA = entries[a] as Task;
         final taskB = entries[b] as Task;
-        return lengthToDeadlineRatio(taskB)
-            .compareTo(lengthToDeadlineRatio(taskA));
+        return lengthToDeadlineRatio(taskB).compareTo(lengthToDeadlineRatio(taskA));
       });
     }
+
+    List<String> quad2 = eisenhowerQuadrants[1];
+    eisenhowerQuadrants[1] = eisenhowerQuadrants[2];
+    eisenhowerQuadrants[2] = quad2;
 
     return eisenhowerQuadrants;
   }
@@ -220,8 +360,7 @@ class EntryManager extends ChangeNotifier {
   Future<void> setStartWorkTime(int startMinutes) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setInt('startWorkMinutes', startMinutes);
-    startWorkTime =
-        TimeOfDay(hour: startMinutes ~/ 60, minute: startMinutes % 60);
+    startWorkTime = TimeOfDay(hour: startMinutes ~/ 60, minute: startMinutes % 60);
     notifyListeners();
   }
 
@@ -237,14 +376,12 @@ class EntryManager extends ChangeNotifier {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int startWorkMinutes = prefs.getInt('startWorkMinutes') ?? -1;
     if (startWorkMinutes != -1) {
-      startWorkTime = TimeOfDay(
-          hour: startWorkMinutes ~/ 60, minute: startWorkMinutes % 60);
+      startWorkTime = TimeOfDay(hour: startWorkMinutes ~/ 60, minute: startWorkMinutes % 60);
     }
 
     int endWorkMinutes = prefs.getInt('endWorkMinutes') ?? -1;
     if (endWorkMinutes != -1) {
-      endWorkTime =
-          TimeOfDay(hour: endWorkMinutes ~/ 60, minute: endWorkMinutes % 60);
+      endWorkTime = TimeOfDay(hour: endWorkMinutes ~/ 60, minute: endWorkMinutes % 60);
     }
 
     final tasks = await DatabaseHelper().getTasks();
@@ -307,171 +444,6 @@ class EntryManager extends ChangeNotifier {
         .toList()
         .cast<Event>();
   }
-
-  Future<List<TimeBlock>> getFreeTimeBlocksToday() async {
-    final List<Event> eventsToday = await getEventsToday();
-    final List<TimeBlock> timeBlocks = [];
-
-    DateTime workStartTime =
-        DateTime(1, 1, 1, startWorkTime.hour, startWorkTime.minute);
-    DateTime workEndTime =
-        DateTime(1, 1, 1, endWorkTime.hour, endWorkTime.minute);
-
-    print("Start Time ${workStartTime}");
-    print("End Time ${workEndTime}");
-
-    // Sort events by start time
-    eventsToday.sort((a, b) => DateTime(
-            1, 1, 1, a.startTime.hour, a.startTime.minute)
-        .compareTo(DateTime(1, 1, 1, b.startTime.hour, b.startTime.minute)));
-
-    if (eventsToday.isNotEmpty) {
-      print("Break1");
-      Event firstEvent = eventsToday.first;
-      DateTime eventStartTime = DateTime(
-          1, 1, 1, firstEvent.startTime.hour, firstEvent.startTime.minute);
-      if (eventStartTime.isAfter(workStartTime)) {
-        print("Break2");
-        timeBlocks.add(TimeBlock(
-            time: workStartTime,
-            duration: eventStartTime.difference(workStartTime)));
-      }
-    } else {
-      print("Break3");
-      timeBlocks.add(TimeBlock(
-          time: workStartTime,
-          duration: workEndTime.difference(workStartTime)));
-    }
-
-    // Iterate through event list to check free time between events
-    for (int i = 0; i < eventsToday.length; i++) {
-      print("Break1");
-
-      Event currentEvent = eventsToday[i];
-      DateTime currentEventStartTime = DateTime(
-          1, 1, 1, currentEvent.startTime.hour, currentEvent.startTime.minute);
-      DateTime currentEventEndTime =
-          currentEventStartTime.add(currentEvent.length);
-
-      if (currentEventEndTime.isAfter(DateTime(1, 1, 1, 24))) {
-        currentEventEndTime = DateTime(1, 1, 1, 24);
-      }
-
-      print("Break2");
-      // Check if time between the current event and next (or end of day, whichever is closer)
-      if (i < eventsToday.length - 1) {
-        Event nextEvent = eventsToday[i + 1];
-        DateTime nextEventStartTime = DateTime(
-            1, 1, 1, nextEvent.startTime.hour, nextEvent.startTime.minute);
-        if (nextEventStartTime.isAfter(currentEventEndTime)) {
-          if (nextEventStartTime.isBefore(workEndTime)) {
-            if (currentEventEndTime.isBefore(workStartTime)) {
-              timeBlocks.add(TimeBlock(
-                  time: workStartTime,
-                  duration: nextEventStartTime.difference(workStartTime)));
-            } else {
-              timeBlocks.add(TimeBlock(
-                  time: currentEventEndTime,
-                  duration:
-                      nextEventStartTime.difference(currentEventEndTime)));
-            }
-          } else {
-            timeBlocks.add(TimeBlock(
-                time: currentEventEndTime,
-                duration: workEndTime.difference(currentEventEndTime)));
-          }
-        }
-      } else if (currentEventEndTime.isBefore(workEndTime)) {
-        if (currentEventEndTime.isBefore(workStartTime)) {
-          timeBlocks.add(TimeBlock(
-              time: workStartTime,
-              duration: workEndTime.difference(workStartTime)));
-        } else {
-          timeBlocks.add(TimeBlock(
-              time: currentEventEndTime,
-              duration: workEndTime.difference(currentEventEndTime)));
-        }
-      }
-    }
-
-    return timeBlocks;
-  }
-
-  int timeAvailable(Duration unassignedDuration, Duration unallocatedTime) {
-    if (unassignedDuration <= unallocatedTime) {
-      return 0;
-    } else if (unassignedDuration >= unallocatedTime) {
-      return 1;
-    } else {
-      return -1;
-    }
-  }
-
-  Future<List<Assignment>> scheduler(int breakTime) async {
-    List<Event> events = await getEventsToday();
-    List<TimeBlock> timeBlocks = await getFreeTimeBlocksToday();
-    List<String> prioritisedItemIDs = classifyTasksIntoQuadrants()
-        .fold([], (previousValue, element) => previousValue + element);
-
-    timeBlocks.forEach((element) {
-      print(
-          "Timeblock Time - ${element.time} - Duration - ${element.duration}");
-    });
-    for (String itemID in prioritisedItemIDs) {
-      Task item = entries[itemID]! as Task;
-      Duration unassignedDuration =
-          (item.estimatedLength - item.timeSpent).inMinutes < 0
-              ? Duration.zero
-              : (item.estimatedLength - item.timeSpent);
-      for (TimeBlock block in timeBlocks) {
-        Duration allocatedTime = block.assignments.fold(
-          Duration.zero,
-          (previousValue, element) =>
-              previousValue + element.duration + Duration(minutes: breakTime),
-        );
-
-        Duration unallocTime = block.duration - allocatedTime;
-        int availability = timeAvailable(unassignedDuration, unallocTime);
-        if (availability == 0) {
-          block.assignments.add(Assignment(
-            time: block.time.add(allocatedTime),
-            itemID: itemID,
-            duration: unassignedDuration,
-          ));
-          unassignedDuration = Duration.zero;
-        } else if (availability == 1) {
-          block.assignments.add(Assignment(
-            time: block.time.add(allocatedTime),
-            itemID: itemID,
-            duration: unallocTime,
-          ));
-          unassignedDuration -= unallocTime;
-          block.duration -= const Duration(minutes: 30);
-        }
-
-        if (unassignedDuration.inMinutes == 0) {
-          break;
-        }
-      }
-    }
-
-    List<Assignment> assignments = timeBlocks.fold<List<Assignment>>(
-      [],
-      (acc, timeBlock) {
-        return acc + timeBlock.assignments;
-      },
-    );
-    assignments += events
-        .map(
-          (e) => Assignment(
-              time: DateTime(1, 1, 1, e.startTime.hour, e.startTime.minute),
-              itemID: e.id,
-              duration: e.length),
-        )
-        .toList();
-
-    return assignments;
-  }
 }
 
 // Used for identification of Entry type across application for conditional rendering
@@ -514,18 +486,15 @@ class Task extends Entry {
   int categoryID = 0;
 
   Task({
-    String? id,
-    required String title,
-    required String description,
+    super.id,
+    required super.title,
+    required super.description,
     required this.deadline,
     required this.estimatedLength,
     this.isCompleted = false,
     this.timeSpent = Duration.zero,
     required this.categoryID,
   }) : super(
-          id: id,
-          title: title,
-          description: description,
           type: EntryType.task,
         );
 
@@ -576,14 +545,11 @@ class Reminder extends Entry {
   DateTime dateTime;
 
   Reminder({
-    String? id,
-    required String title,
-    required String description,
+    super.id,
+    required super.title,
+    required super.description,
     required this.dateTime,
   }) : super(
-          id: id,
-          title: title,
-          description: description,
           type: EntryType.reminder,
         );
 
@@ -613,17 +579,14 @@ class Event extends Entry {
   Recurrence recurrence;
 
   Event({
-    String? id,
-    required String title,
-    required String description,
+    super.id,
+    required super.title,
+    required super.description,
     required this.startDate,
     required this.startTime,
     required this.length,
     required this.recurrence,
   }) : super(
-          id: id,
-          title: title,
-          description: description,
           type: EntryType.event,
         );
 
@@ -645,19 +608,16 @@ class Event extends Entry {
   static Event fromMap(Map<String, dynamic> map) {
     List<String> daysOfWeekList = (map['daysOfWeek'] as String).split(',');
     if (daysOfWeekList.isNotEmpty) daysOfWeekList.removeLast();
-    List<int> daysOfWeekIntList =
-        daysOfWeekList.map((day) => int.parse(day)).toList();
+    List<int> daysOfWeekIntList = daysOfWeekList.map((day) => int.parse(day)).toList();
 
-    List<int> startTimeParams = ((map['startTime'] as String).split(','))
-        .map((e) => int.parse(e))
-        .toList();
+    List<int> startTimeParams =
+        ((map['startTime'] as String).split(',')).map((e) => int.parse(e)).toList();
 
     return Event(
       id: map['id'],
       title: map['title'],
       description: map['description'],
-      startTime:
-          TimeOfDay(hour: startTimeParams[0], minute: startTimeParams[1]),
+      startTime: TimeOfDay(hour: startTimeParams[0], minute: startTimeParams[1]),
       startDate: DateTime.fromMillisecondsSinceEpoch(map['startDate'] as int),
       length: Duration(minutes: map['length']),
       recurrence: Recurrence(

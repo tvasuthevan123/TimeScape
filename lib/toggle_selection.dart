@@ -1,4 +1,3 @@
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 
@@ -8,11 +7,11 @@ class ToggleButtonSelection extends StatefulWidget {
   final bool allowMultipleSelection;
 
   const ToggleButtonSelection({
-    Key? key,
+    super.key,
     required this.buttonLabels,
     this.onPressCallback,
     this.allowMultipleSelection = false,
-  }) : super(key: key);
+  });
 
   @override
   State<ToggleButtonSelection> createState() => _ToggleButtonSelectionState();

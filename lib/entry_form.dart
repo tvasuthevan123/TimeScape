@@ -7,7 +7,7 @@ import 'package:timescape/date_picker.dart';
 import 'package:timescape/duration_picker.dart';
 
 class EntryForm extends StatefulWidget {
-  const EntryForm({Key? key}) : super(key: key);
+  const EntryForm({super.key});
   @override
   State<EntryForm> createState() => _EntryFormState();
 }

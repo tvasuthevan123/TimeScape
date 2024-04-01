@@ -1,13 +1,10 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:timescape/notification_service.dart';
 import 'package:timescape/entry_manager.dart';
-import 'package:timescape/category_setup.dart';
 import 'package:timezone/timezone.dart';
 
 class DatabaseHelper {
@@ -18,7 +15,6 @@ class DatabaseHelper {
   Future<void> resetDB() async {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, dbName);
-    // print("Database $path");
     print("Deleting database");
     try {
       Directory(path).deleteSync(recursive: true);
@@ -44,6 +40,8 @@ class DatabaseHelper {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, dbName);
     print("Init Database $path");
+
+    // await resetDB();
 
     return openDatabase(
       path,
@@ -112,8 +110,7 @@ class DatabaseHelper {
   Future<int> addReminder(Reminder reminder) async {
     final db = await database;
 
-    NotificationDetails details =
-        NotificationService().getNotificationDetails(EntryType.reminder);
+    NotificationDetails details = NotificationService().getNotificationDetails(EntryType.reminder);
 
     print(reminder.dateTime);
     NotificationService().flutterLocalNotificationsPlugin.zonedSchedule(
@@ -121,8 +118,7 @@ class DatabaseHelper {
         "TimeScape Reminder",
         reminder.title,
         TZDateTime.from(reminder.dateTime, local),
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
         androidAllowWhileIdle: true,
         details);
 
@@ -147,8 +143,7 @@ class DatabaseHelper {
   Future<int> updateTask(Task item) async {
     final db = await database;
 
-    return db
-        .update('tasks', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
+    return db.update('tasks', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
   }
 
   Future<int> deleteTask(Task item) async {
@@ -169,16 +164,13 @@ class DatabaseHelper {
   Future<int> updateReminder(Reminder item) async {
     final db = await database;
 
-    return db.update('reminders', item.toMap(),
-        where: 'id = ?', whereArgs: [item.id]);
+    return db.update('reminders', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
   }
 
   Future<int> deleteReminder(Reminder item) async {
     final db = await database;
 
-    NotificationService()
-        .flutterLocalNotificationsPlugin
-        .cancel(item.id.hashCode);
+    NotificationService().flutterLocalNotificationsPlugin.cancel(item.id.hashCode);
 
     return db.delete('reminders', where: 'id = ?', whereArgs: [item.id]);
   }
@@ -195,8 +187,7 @@ class DatabaseHelper {
   Future<int> updateEvent(Event item) async {
     final db = await database;
 
-    return db
-        .update('events', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
+    return db.update('events', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
   }
 
   Future<int> deleteEvent(Event item) async {
@@ -235,8 +226,7 @@ class DatabaseHelper {
 
   Future<List<String>> getTodayEventIDs() async {
     final today = DateTime.now();
-    final todayStart =
-        DateTime(today.year, today.month, today.day).millisecondsSinceEpoch;
+    final todayStart = DateTime(today.year, today.month, today.day).millisecondsSinceEpoch;
     final todayEnd = todayStart + const Duration(days: 1).inMilliseconds - 1;
 
     final db = await database;

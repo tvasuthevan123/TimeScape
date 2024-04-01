@@ -7,7 +7,7 @@ import 'package:timescape/entry_manager.dart';
 class FocusMode extends StatefulWidget {
   final Task task;
 
-  const FocusMode({Key? key, required this.task}) : super(key: key);
+  const FocusMode({super.key, required this.task});
 
   @override
   State<FocusMode> createState() => _FocusModeState();

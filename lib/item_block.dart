@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class TaskBlock extends StatelessWidget {
   final String text;
 
-  const TaskBlock({Key? key, required this.text}) : super(key: key);
+  const TaskBlock({super.key, required this.text});
 
   @override
   Widget build(BuildContext context) {

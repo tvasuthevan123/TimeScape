@@ -7,11 +7,11 @@ class DateTimePicker extends StatefulWidget {
   final bool showTime;
 
   const DateTimePicker({
-    Key? key,
+    super.key,
     required this.onDateTimeChanged,
     this.showDate = true,
     this.showTime = true,
-  }) : super(key: key);
+  });
 
   @override
   State<DateTimePicker> createState() => _DateTimePickerState();
